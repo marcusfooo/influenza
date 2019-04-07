@@ -1,4 +1,4 @@
-#Influenza Project
+# Influenza Project
 
 Predicting mutations of influenza sequences
 
@@ -12,8 +12,7 @@ $ source env/bin/activate
 $ pip i -r requirements.txt
 ```
 
-## Usage
-------------
+## Project Structure
 
     ├── data
     │   ├── external       <- Data from third party sources.
