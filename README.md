@@ -15,9 +15,8 @@ $ source env/bin/activate
 ## Project Structure
 
     ├── data
-    │   ├── external       <- Data from third party sources.
-    │   ├── interim        <- Intermediate data that has been transformed.
     │   ├── processed      <- The final, canonical data sets for modeling.
+    │   ├── interim        <- Intermediate data that has been transformed.
     │   └── raw            <- The original, immutable data dump.
     │
     ├── models             <- Trained and serialized models, model predictions, or model summaries
