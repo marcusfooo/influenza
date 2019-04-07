@@ -9,7 +9,7 @@ Predicting mutations of influenza sequences
 # Run this in the project root
 $ python3 -m venv env
 $ source env/bin/activate
-$ pip i -r requirements.txt
+(env) $ pip i -r requirements.txt
 ```
 
 ## Project Structure
@@ -30,21 +30,21 @@ $ pip i -r requirements.txt
     ├── requirements.txt   <- The requirements file for reproducing the analysis environment, e.g.
     │                         generated with `pip freeze > requirements.txt`
     │
-    ├── src                <- Source code for use in this project.
-    │   │
-    │   ├── data           <- Scripts to download or generate data
-    │   │   └── make_dataset.py
-    │   │
-    │   ├── features       <- Scripts to turn raw data into features for modeling
-    │   │   └── build_features.py
-    │   │
-    │   ├── models         <- Scripts to train models and then use trained models to make
-    │   │   │                 predictions
-    │   │   ├── predict_model.py
-    │   │   └── train_model.py
-    │   │
-    │   └── visualization  <- Scripts to create exploratory and results oriented visualizations
-    │       └── visualize.py
+    └── src                <- Source code for use in this project.
+       │
+       ├── data           <- Scripts to download or generate data
+       │   └── make_dataset.py
+       │
+       ├── features       <- Scripts to turn raw data into features for modeling
+       │   └── build_features.py
+       │
+       ├── models         <- Scripts to train models and then use trained models to make
+       │   │                 predictions
+       │   ├── predict_model.py
+       │   └── train_model.py
+       │
+       └── visualization  <- Scripts to create exploratory and results oriented visualizations
+           └── visualize.py
 
 --------
 
