@@ -13,15 +13,15 @@ class LSTMModel(nn.Module):
     self.layer2 = nn.Linear(hidden_size, output_dim)
 
 
-  def forward(self, trigram_seq, h_init, c_init):
-    LSTM_output, _ = self.layer1(trigram_seq, (h_init, c_init))
+  def forward(self, trigram_seq, hidden_state):
+    LSTM_output, _ = self.layer1(trigram_seq, hidden_state)
     score_seq = self.layer2(LSTM_output[-1,:,:])
 
     return score_seq
   
   
   def init_hidden(self, batch_size):
-    h_init = zeros(self.layer_num, batch_size, self.hidden_size)
-    c_init = zeros(self.layer_num, batch_size, self.hidden_size)
+    h_init = zeros(self.num_of_layers, batch_size, self.hidden_size)
+    c_init = zeros(self.num_of_layers, batch_size, self.hidden_size)
     
     return (h_init, c_init)
