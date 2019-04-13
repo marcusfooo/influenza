@@ -31,10 +31,10 @@ $ source env/bin/activate
     │
     └── src                <- Source code for use in this project.
        │
-       ├── data           <- Scripts to download or generate data
+       ├── data           <- Scripts to read in or generate data
        │   └── make_dataset.py
        │
-       ├── features       <- Scripts to turn raw data into features for modeling
+       ├── features       <- Scripts to turn raw data into features for processing
        │   └── build_features.py
        │
        ├── models         <- Scripts to train models and then use trained models to make
