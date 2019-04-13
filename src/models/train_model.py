@@ -3,9 +3,10 @@ import math
 import time
 
 
-def train_rnn(model, loss_function, epochs, learning_rate, batch_size, X, Y):
+def train_rnn(model,epochs, learning_rate, batch_size, X, Y):
     optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
 
+    loss_function = torch.nn.CrossEntropyLoss()
     num_of_examples = X.shape[1]
     num_of_batches = math.floor(num_of_examples/batch_size)
 
