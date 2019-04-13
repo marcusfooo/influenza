@@ -36,31 +36,7 @@ def split_to_trigrams(strains_by_year, overlapping=True):
 
   return trigrams_by_year
 
-def to_time_series(trigrams_by_year):
-  """TODO: DOCSTRING"""
-  num_of_samples = len(trigrams_by_year[0][0])
-  time_series = []
-
-  for _ in trigrams_by_year:
-    year_series = [[]] * len(trigrams_by_year[0][0])
-    for year_trigrams in trigrams_by_year:
-      year_series = [[]] * len(year_trigrams[0])
-
-      for trigrams in year_trigrams:
-        for pos, trigram in enumerate(trigrams):
-            year_series[pos] = year_series[pos] + [trigram]
-    
-        year_series[pos] = year_series[pos] + [trigrams[pos]]
-
-    print(year_series)
-    time_series.append(year_series)
-      
-
-  
-
-  return time_series
-
-def trigrams_to_indexes(trigrams_series, trigram_to_idx):
+def trigrams_to_indexes(trigrams_by_year, trigram_to_idx):
   """TODO: DOCSTRING"""
   dummy_idx = len(trigram_to_idx)
   
@@ -70,12 +46,31 @@ def trigrams_to_indexes(trigrams_series, trigram_to_idx):
     else:
       return dummy_idx
    
-  training_indexes = []
-  for example in trigrams_series:
-    training_indexes.append(list(map(mapping, example)))
+  trigrams_idxs_by_year = []
+  for year_trigrams in trigrams_by_year:
+    year_trigrams_idxs = []
+
+    for trigrams in year_trigrams:
+        year_trigrams_idxs.append(list(map(mapping, trigrams)))
     
-  # Comment on transpose
-  return np.transpose(np.array(training_indexes))
+    trigrams_idxs_by_year.append(year_trigrams_idxs)
+    
+  return trigrams_idxs_by_year
+
+def concat_trigrams(trigrams_by_year):
+  """Takes all strains (represented by trigrams) from each year 
+  and concatenates them into a single array"""
+  concated_trigrams_by_year = []
+
+  for year_trigrams in trigrams_by_year:
+      concated_trigrams = []
+
+      for trigrams in year_trigrams:
+          concated_trigrams += trigrams
+
+      concated_trigrams_by_year.append(concated_trigrams)
+
+  return concated_trigrams_by_year
 
 def indexes_to_trigram_vecs(training_indexes, trigram_vecs):
   """TODO: DOCSTRING"""
