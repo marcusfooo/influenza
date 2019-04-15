@@ -8,14 +8,15 @@ from src.features import build_features
 import numpy as np
 
 data_files = ['2011.csv', '2012.csv', '2013.csv', '2014.csv', '2015.csv', '2016.csv']
+data_path = './data/raw/'
 
 print('---> Reading in TrigramVecs...')
-trigram_to_idx, trigram_vecs_data = make_dataset.read_trigram_vecs()
+trigram_to_idx, trigram_vecs_data = make_dataset.read_trigram_vecs(data_path)
 print(f'Number of possible 3-grams: {len(trigram_to_idx)}')
 print(f'Dimension of TrigramVecs: {len(trigram_vecs_data[0])}')
 
 print('\n---> Reading in strains...')
-strains_by_year = make_dataset.read_strains_from(data_files)
+strains_by_year = make_dataset.read_strains_from(data_files, data_path)
 print(f'Strains from {len(data_files)} years were read.')
 print(f'Shape: {np.array(strains_by_year).shape}')
 print(f'Example strain:\n{strains_by_year[0][0]}')
