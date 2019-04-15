@@ -85,5 +85,25 @@ def indexes_to_trigram_vecs(training_indexes, trigram_vecs):
   training_vecs = []
   for example in training_indexes:
     training_vecs.append(list(map(mapping, example)))
-    
   return training_vecs
+
+def indexes_by_year_to_trigram_vecs(training_indexes_by_year, trigram_vecs_source):
+  """TODO: DOCSTRING"""
+  dummy_vec = np.array([0] * trigram_vecs_source.shape[1])
+  
+  def mapping(idx):
+    if idx < trigram_vecs_source.shape[0]:
+      return trigram_vecs_source[idx]
+    else:
+      return dummy_vec
+  
+  trigram_vecs = []
+  for year_trigrams in training_indexes_by_year:
+    year_trigram_vecs = []
+
+    for trigrams in year_trigrams:
+        year_trigram_vecs.append(list(map(mapping, trigrams)))
+
+    trigram_vecs.append(year_trigram_vecs)
+
+  return trigram_vecs

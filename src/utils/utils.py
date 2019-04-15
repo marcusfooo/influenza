@@ -1,9 +1,24 @@
-def to_time_series(data_by_year):
-  """TODO: DOCSTRING"""
-  data_series = [[]] * len(data_by_year[0][0])
+from src.data import make_dataset
+from src.features import build_features
 
-  for year_elems in data_by_year:
-    for pos, elem in enumerate(year_elems):
-      data_series[pos] = data_series[pos] + [elem[pos]]
+def read_and_process_to_trigram_vecs(data_files, data_path='../data/raw/', sample_size=100, concat=True):
+  trigram_to_idx, trigram_vecs_data = make_dataset.read_trigram_vecs(data_path)
 
-  return data_series
+  strains_by_year = make_dataset.read_strains_from(data_files, data_path)
+
+  if sample_size > 0:
+    strains_by_year = build_features.sample_strains(strains_by_year, sample_size)
+
+  trigrams_by_year = build_features.split_to_trigrams(strains_by_year)
+
+  trigram_idxs_by_year = build_features.trigrams_to_indexes(trigrams_by_year, trigram_to_idx)
+
+  if concat:
+    concated_trigrams_by_year = build_features.concat_trigrams(trigram_idxs_by_year)
+    trigram_vecs = build_features.indexes_to_trigram_vecs(concated_trigrams_by_year, trigram_vecs_data)
+  else:
+    trigram_vecs = build_features.indexes_by_year_to_trigram_vecs(trigram_idxs_by_year, trigram_vecs_data)
+
+  return trigram_vecs
+
+
