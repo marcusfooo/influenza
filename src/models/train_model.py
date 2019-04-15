@@ -2,6 +2,12 @@ import torch
 import math
 import time
 
+def repackage_hidden(h):
+        """Wraps hidden states in new Tensors, to detach them from their history."""
+        if isinstance(h, torch.Tensor):
+            return h.detach()
+        else:
+            return tuple(repackage_hidden(v) for v in h)
 
 def train_rnn(model,epochs, learning_rate, batch_size, X, Y):
     optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
@@ -35,12 +41,4 @@ def train_rnn(model,epochs, learning_rate, batch_size, X, Y):
         elapsed_time = time.time()-start_time
 
 
-        print('epoch=', epoch, '\t time=', elapsed_time, '\t exp(loss)=',  math.exp(epoch_loss))
-
-
-    def repackage_hidden(h):
-        """Wraps hidden states in new Tensors, to detach them from their history."""
-        if isinstance(h, torch.Tensor):
-            return h.detach()
-        else:
-            return tuple(repackage_hidden(v) for v in h)
+        print('epoch=', epoch, '\t time=', elapsed_time, '\t loss',  epoch_loss)
