@@ -19,6 +19,7 @@ def split_to_trigrams(strains_by_year, overlapping=True):
   else:
     step_size = 3
     num_of_trigrams = len(strains_by_year[0][0]) // step_size
+    # TODO Handle the remainder in some way
 
   trigrams_by_year = []
   for year_strains in strains_by_year:
@@ -86,6 +87,20 @@ def indexes_to_trigram_vecs(training_indexes, trigram_vecs):
   for example in training_indexes:
     training_vecs.append(list(map(mapping, example)))
   return training_vecs
+
+def indexes_to_mutations(trigram_indexes_x, trigram_indexes_y):
+  """
+  Creates an numpy array containing 1's in positions where trigram_indexes_x and
+  trigram_indexes_y differ, corresponding to mutated sites and zeros elsewhere.
+  """
+  assert(len(trigram_indexes_x) == len(trigram_indexes_y))
+
+  mutations = np.zeros(len(trigram_indexes_x))
+  for i in range(len(trigram_indexes_x)):
+    if trigram_indexes_x[i] != trigram_indexes_y[i]:
+        mutations[i] = 1
+  
+  return mutations
 
 def indexes_by_year_to_trigram_vecs(training_indexes_by_year, trigram_vecs_source):
   """TODO: DOCSTRING"""
