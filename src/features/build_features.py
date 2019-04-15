@@ -107,3 +107,44 @@ def indexes_by_year_to_trigram_vecs(training_indexes_by_year, trigram_vecs_sourc
     trigram_vecs.append(year_trigram_vecs)
 
   return trigram_vecs
+
+def extract_positions_by_year(positions, strains_by_year):
+
+  extracted_by_year = []
+  for year_strains in strains_by_year:
+    year_extracted = []
+
+    for strain in year_strains:
+        year_extracted.append(extract_positions(positions, strain))
+
+    extracted_by_year.append(year_extracted)
+
+  return extracted_by_year
+
+def extract_positions(positions, data):
+  num_of_positons = len(positions)
+
+  # pad single positions
+  padded_positions = []
+  for i in range(num_of_positons):
+    first_pos = positions[i]
+    second_pos = positions[i+1]
+    third_pos = positions[i+2]
+    if(second_pos - first_pos > 1):
+      padded_positions += [first_pos, first_pos+1, first_pos+2]
+    elif(second_pos - first_pos == 1 and third_pos - first_pos > 2):
+      padded_positions += [first_pos, second_pos, first_pos+2]
+      i += 1
+    else:
+      padded_positions += [first_pos, second_pos, third_pos]
+      i += 2
+
+    if(i > num_of_positons-2): break
+
+  extracted_elems = ''
+  for position in padded_positions:
+      extracted_elems += data[position]
+      
+  return extracted_elems
+    
+        
