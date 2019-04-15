@@ -11,14 +11,14 @@ def read_and_process_to_trigram_vecs(data_files, data_path='../data/raw/', sampl
 
   trigrams_by_year = build_features.split_to_trigrams(strains_by_year)
 
-  trigram_idxs_by_year = build_features.trigrams_to_indexes(trigrams_by_year, trigram_to_idx)
+  trigram_idxs = build_features.trigrams_to_indexes(trigrams_by_year, trigram_to_idx)
 
   if concat:
-    concated_trigrams_by_year = build_features.concat_trigrams(trigram_idxs_by_year)
-    trigram_vecs = build_features.indexes_to_trigram_vecs(concated_trigrams_by_year, trigram_vecs_data)
+    trigram_idxs = build_features.concat_trigrams(trigram_idxs)
+    trigram_vecs = build_features.indexes_to_trigram_vecs(trigram_idxs, trigram_vecs_data)
   else:
-    trigram_vecs = build_features.indexes_by_year_to_trigram_vecs(trigram_idxs_by_year, trigram_vecs_data)
+    trigram_vecs = build_features.indexes_by_year_to_trigram_vecs(trigram_idxs, trigram_vecs_data)
 
-  return trigram_vecs
+  return trigram_vecs, trigram_idxs
 
 
