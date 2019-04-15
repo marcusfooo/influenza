@@ -18,6 +18,7 @@ def train_rnn(model,epochs, learning_rate, batch_size, X, Y):
 
         for count in range(0, num_of_examples - batch_size, batch_size):
             optimizer.zero_grad()
+            repackage_hidden(hidden)
 
             X_batch = X[:, count:count+batch_size, :]
             Y_batch = Y[count:count+batch_size]
@@ -35,3 +36,11 @@ def train_rnn(model,epochs, learning_rate, batch_size, X, Y):
 
 
         print('epoch=', epoch, '\t time=', elapsed_time, '\t exp(loss)=',  math.exp(epoch_loss))
+
+
+    def repackage_hidden(h):
+        """Wraps hidden states in new Tensors, to detach them from their history."""
+        if isinstance(h, torch.Tensor):
+            return h.detach()
+        else:
+            return tuple(repackage_hidden(v) for v in h)
