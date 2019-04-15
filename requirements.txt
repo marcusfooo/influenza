@@ -38,9 +38,12 @@ python-dateutil==2.8.0
 pytz==2018.9
 pyzmq==18.0.1
 qtconsole==4.4.3
+scikit-learn==0.20.3
+scipy==1.2.1
 Send2Trash==1.5.0
 six==1.12.0
--e git+https://github.com/zuberek/influenza.git@3db5a9ddcf8d85c3fc7d1c66a56f6a4cd62ead83#egg=src
+sklearn==0.0
+-e git+https://github.com/zuberek/influenza.git@ae7a5f43cb2af07a4efc67de6cd00040c2f229ce#egg=src
 terminado==0.8.2
 testpath==0.4.2
 torch==1.0.1.post2
