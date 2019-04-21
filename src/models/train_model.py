@@ -115,7 +115,7 @@ def train_rnn(model, epochs, learning_rate, batch_size, X, Y, X_test, Y_test):
             all_val_losses.append(val_loss)
 
         if epoch % print_interval == 0:
-            print('Epoch: %d\tTime: %.1f s\tLoss: %.4f\tAcc: %.4f\tVal loss: %.4f\tVal acc: %.4f\tPrecision: %.4f\tRecall: %.4f'
+            print(' Epoch %d\tTime %.0f s\tLoss %.3f\tAcc  %.3f\tV loss %.3f\tV acc  %.3f\tPrecis %.3f\tRecall  %.3f'
                 % (epoch, elapsed_time, epoch_loss, epoch_acc, val_loss, val_acc, precision, recall))
 
     plot_training_history(all_losses, all_val_losses, all_accs, all_val_accs)
