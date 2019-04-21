@@ -11,7 +11,53 @@ def repackage_hidden(h):
         else:
             return tuple(repackage_hidden(v) for v in h)
 
+
+def plot_training_history(loss, val_loss, acc, val_acc):
+    plt.style.use('ggplot')
+    
+    plt.figure()
+    plt.plot(loss, 'b', label='Training')
+    plt.plot(val_loss, 'r', label='Validation')
+    plt.title('Loss')
+    plt.legend()
+
+    plt.figure()
+    plt.plot(acc, 'b', label='Training')
+    plt.plot(val_acc, 'r', label='Validation')
+    plt.title('Accuracy')
+    plt.legend()
+    plt.show()
+
+
+def get_predictions(scores):
+    prob = F.softmax(scores, dim=1)
+    _, predictions = torch.topk(prob, 1)
+    return predictions
+
+
+def confusion_matrix(y_true, y_pred):
+    y_pred = y_pred.view_as(y_true)
+
+    TP, FP, TN, FN = 0, 0, 0, 0
+    for i in range(y_true.shape[0]):
+        if i ==0:
+            pass
+            #print(int(y_true[0]))
+            #print(int(y_pred[0]))
+        if y_true[i] == 0 and y_pred[i] == 0:
+            TN += 1
+        elif y_true[i] == 0 and y_pred[i] == 1:
+            FP += 1
+        elif y_true[i] == 1 and y_pred[i] == 0:
+            FN += 1
+        elif y_true[i] == 1 and y_pred[i] == 1:
+            TP += 1
+
+    return TP, FP, TN, FN
+            
+
 def train_rnn(model, epochs, learning_rate, batch_size, X, Y, X_test, Y_test):
+    print_interval = 10
     optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
 
     criterion = torch.nn.CrossEntropyLoss()
@@ -42,10 +88,9 @@ def train_rnn(model, epochs, learning_rate, batch_size, X, Y, X_test, Y_test):
             loss.backward()
             optimizer.step()
 
-            prob = F.softmax(scores, dim=1)
-            _, prediction = torch.topk(prob, 1)
-            prediction = prediction.view_as(Y_batch)
-            running_acc += int((Y_batch.eq(prediction)).sum())
+            predictions = get_predictions(scores)
+            TP, _, TN, _ = confusion_matrix(Y_batch, predictions)
+            running_acc += TP + TN
 
             running_loss += loss.item()
 
@@ -57,30 +102,20 @@ def train_rnn(model, epochs, learning_rate, batch_size, X, Y, X_test, Y_test):
 
         with torch.no_grad():
             scores = model(X_test, model.init_hidden(Y_test.shape[0]))
-            prob = F.softmax(scores, dim=1)
-            _, prediction = torch.topk(prob, 1)
-            prediction = prediction.view_as(Y_test)
-
-            correct = (Y_test.eq(prediction)).sum()
-            val_acc = int(correct)/Y_test.shape[0]
+            predictions = get_predictions(scores)
+            
+            TP, FP, TN, FN = confusion_matrix(predictions, Y_test)
+            precision = TP / (TP + FP) if TP + FP > 0 else 0
+            recall = TP / (TP + FN) if TP + FN > 0 else 0
+            
+            val_acc = (TP + TN) / (TP + FP + TN + FN)
             all_val_accs.append(val_acc)
 
             val_loss = criterion(scores, Y_test).item()
             all_val_losses.append(val_loss)
 
-        print('Epoch: %d\tTime: %.1f s\tLoss: %.4f\tAcc: %.4f\tVal loss: %.4f\tVal acc: %.4f'
-            % (epoch, elapsed_time, epoch_loss, epoch_acc, val_loss, val_acc))
-        
-    plt.style.use('ggplot')
-    plt.figure()
-    plt.plot(all_losses, 'b', label='Training')
-    plt.plot(all_val_losses, 'r', label='Validation')
-    plt.title('Loss')
-    plt.legend()
+        if epoch % print_interval == 0:
+            print('Epoch: %d\tTime: %.1f s\tLoss: %.4f\tAcc: %.4f\tVal loss: %.4f\tVal acc: %.4f\tPrecision: %.4f\tRecall: %.4f'
+                % (epoch, elapsed_time, epoch_loss, epoch_acc, val_loss, val_acc, precision, recall))
 
-    plt.figure()
-    plt.plot(all_accs, 'b', label='Training')
-    plt.plot(all_val_accs, 'r', label='Validation')
-    plt.title('Accuracy')
-    plt.legend()
-    plt.show()
+    plot_training_history(all_losses, all_val_losses, all_accs, all_val_accs)
