@@ -40,10 +40,6 @@ def confusion_matrix(y_true, y_pred):
 
     TP, FP, TN, FN = 0, 0, 0, 0
     for i in range(y_true.shape[0]):
-        if i ==0:
-            pass
-            #print(int(y_true[0]))
-            #print(int(y_pred[0]))
         if y_true[i] == 0 and y_pred[i] == 0:
             TN += 1
         elif y_true[i] == 0 and y_pred[i] == 1:
@@ -104,7 +100,7 @@ def train_rnn(model, epochs, learning_rate, batch_size, X, Y, X_test, Y_test):
             scores = model(X_test, model.init_hidden(Y_test.shape[0]))
             predictions = get_predictions(scores)
             
-            TP, FP, TN, FN = confusion_matrix(predictions, Y_test)
+            TP, FP, TN, FN = confusion_matrix(Y_test, predictions)
             precision = TP / (TP + FP) if TP + FP > 0 else 0
             recall = TP / (TP + FN) if TP + FN > 0 else 0
             
