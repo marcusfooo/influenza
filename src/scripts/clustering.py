@@ -12,7 +12,7 @@ data_files = ['2015.csv', '2016.csv']
 data_files = ['2015.csv']
 data_path = './data/raw/'
 
-trigram_vecs, _ = utils.read_and_process_to_trigram_vecs(data_files, data_path, sample_size=0, concat=False)
+trigram_vecs, _ = utils.read_and_process_to_trigram_vecs(data_files, data_path, sample_size=0, squeeze=False)
 print(f'Shape: {len(trigram_vecs)}x{len(trigram_vecs[0])}x{len(trigram_vecs[0][0])}')
 
 clusters = cluster.cluster_years(trigram_vecs, method='KMeans')

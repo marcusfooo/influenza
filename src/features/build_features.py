@@ -11,6 +11,7 @@ def sample_strains(strains_by_year, num_of_samples):
 
   return sampled_strains_by_year
 
+
 def split_to_trigrams(strains_by_year, overlapping=True):
   """TODO: DOCSTRING"""
   if overlapping:
@@ -37,6 +38,7 @@ def split_to_trigrams(strains_by_year, overlapping=True):
 
   return trigrams_by_year
 
+
 def trigrams_to_indexes(trigrams_by_year, trigram_to_idx):
   """TODO: DOCSTRING"""
   dummy_idx = len(trigram_to_idx)
@@ -58,35 +60,22 @@ def trigrams_to_indexes(trigrams_by_year, trigram_to_idx):
     
   return trigrams_idxs_by_year
 
-def concat_trigrams(trigrams_by_year):
+
+def squeeze_trigrams(trigrams_by_year):
   """Takes all strains (represented by trigrams) from each year 
-  and concatenates them into a single array"""
-  concated_trigrams_by_year = []
+  and squeezes them into a single array"""
+  squeezed_trigrams_by_year = []
 
   for year_trigrams in trigrams_by_year:
-      concated_trigrams = []
+      squeezed_trigrams = []
 
       for trigrams in year_trigrams:
-          concated_trigrams += trigrams
+          squeezed_trigrams += trigrams
 
-      concated_trigrams_by_year.append(concated_trigrams)
+      squeezed_trigrams_by_year.append(squeezed_trigrams)
 
-  return concated_trigrams_by_year
+  return squeezed_trigrams_by_year
 
-def indexes_to_trigram_vecs(training_indexes, trigram_vecs):
-  """TODO: DOCSTRING"""
-  dummy_vec = np.array([0] * trigram_vecs.shape[1])
-  
-  def mapping(idx):
-    if idx < trigram_vecs.shape[0]:
-      return trigram_vecs[idx]
-    else:
-      return dummy_vec
-  
-  training_vecs = []
-  for example in training_indexes:
-    training_vecs.append(list(map(mapping, example)))
-  return training_vecs
 
 def indexes_to_mutations(trigram_indexes_x, trigram_indexes_y):
   """
@@ -102,26 +91,26 @@ def indexes_to_mutations(trigram_indexes_x, trigram_indexes_y):
   
   return mutations
 
-def indexes_by_year_to_trigram_vecs(training_indexes_by_year, trigram_vecs_source):
+
+def indexes_to_trigram_vecs(training_indexes, trigram_vecs_data):
   """TODO: DOCSTRING"""
-  dummy_vec = np.array([0] * trigram_vecs_source.shape[1])
+  dummy_vec = np.array([0] * trigram_vecs_data.shape[1])
   
   def mapping(idx):
-    if idx < trigram_vecs_source.shape[0]:
-      return trigram_vecs_source[idx]
+    if isinstance(idx, int):
+      if idx < trigram_vecs_data.shape[0]:
+        return trigram_vecs_data[idx]
+      else:
+        return dummy_vec
+
+    elif isinstance(idx, list):
+      return list(map(mapping, idx))
+      
     else:
-      return dummy_vec
-  
-  trigram_vecs = []
-  for year_trigrams in training_indexes_by_year:
-    year_trigram_vecs = []
+      raise TypeError('Expected nested list of ints for argument training_indexes, but encountered {} in recursion.'.format(type(idx)))
 
-    for trigrams in year_trigrams:
-        year_trigram_vecs.append(list(map(mapping, trigrams)))
+  return list(map(mapping, training_indexes))
 
-    trigram_vecs.append(year_trigram_vecs)
-
-  return trigram_vecs
 
 def extract_positions_by_year(positions, strains_by_year):
 
@@ -135,6 +124,7 @@ def extract_positions_by_year(positions, strains_by_year):
     extracted_by_year.append(year_extracted)
 
   return extracted_by_year
+
 
 def extract_positions(positions, data):
   num_of_positons = len(positions)
@@ -161,5 +151,3 @@ def extract_positions(positions, data):
       extracted_elems += data[position]
       
   return extracted_elems
-    
-        
