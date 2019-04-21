@@ -8,7 +8,7 @@ from sklearn.neighbors import NearestNeighbors
 import numpy as np
 from math import floor
 
-def cluster_years(trigram_vecs, method='DBSCAN', remove_outliers=True):
+def cluster_years(trigram_vecs, method='DBSCAN', remove_outliers=False):
     clusters = []
     for year_trigram_vecs in trigram_vecs:
         prot_vecs = np.array(year_trigram_vecs).sum(axis=1)
@@ -37,17 +37,14 @@ def cluster_years(trigram_vecs, method='DBSCAN', remove_outliers=True):
             prot_vecs = [prot_vec for i, prot_vec in enumerate(prot_vecs) if i not in idxs_to_remove]
             labels = [label for i, label in enumerate(labels) if i not in idxs_to_remove]
 
-        clusters.append([prot_vecs, labels, centroids])
+        clusters.append({'prot_vecs':prot_vecs, 'labels':labels, 'centroids':centroids})
 
     return clusters
 
 def evaluate_clusters(clusters):
     scores = []
     for cluster in clusters:
-        prot_vecs = cluster[0]
-        labels = cluster[1]
-
-        score = silhouette_score(prot_vecs, labels)
+        score = silhouette_score(cluster['prot_vecs'], cluster['labels'])
         scores.append(score)
 
     average = sum(scores) / float(len(scores))
@@ -58,19 +55,22 @@ def link_clusters(clusters):
     no_years = len(clusters)
 
     first_cluster = clusters[0]
-    centroids = first_cluster[2]
+    centroids = first_cluster['centroids']
 
-    neigh = NearestNeighbors(n_neighbors=2)
+    neigh = NearestNeighbors(n_neighbors=1)
 
-    for centroid in centroids:
+    for i, centroid in enumerate(centroids):
         links = []
         current_centroid = centroid
+
         for year_idx in range(no_years-1):
-            year_centroids = clusters[year_idx+1][2]
+            year_centroids = clusters[year_idx+1]['centroids']
             neigh.fit(year_centroids)
 
             ind = neigh.kneighbors([current_centroid], return_distance=False)
             current_centroid = year_centroids[ind[0][0]]
             links.append(ind)
         
-        print(links)
+        linked.append(links)
+
+    return linked
