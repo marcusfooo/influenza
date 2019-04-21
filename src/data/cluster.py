@@ -1,32 +1,34 @@
 from sklearn.cluster import KMeans
-import matplotlib.pyplot as plt
+from sklearn.cluster import DBSCAN
+from sklearn.metrics import silhouette_score
 import numpy as np
-from sklearn.decomposition import PCA
 
-def cluster_year(year_trigrams_vecs):
-    numpi = np.array(year_trigrams_vecs)
-    prot_vecs = numpi.sum(axis=2)
-    print('Summed up to one vector per strain')
-    print(f'Shape: {prot_vecs.shape}')
+def cluster_years(trigram_vecs, method='DBSCAN'):
+    clusters = []
+    for year_trigram_vecs in trigram_vecs:
+        prot_vecs = np.array(year_trigram_vecs).sum(axis=2)
 
-    pca = PCA(n_components=2)
-    pca_result = pca.fit_transform(prot_vecs)
+        if(method == 'DBSCAN'):
+            clf = DBSCAN(eps=0.01, metric='cosine').fit(prot_vecs)
+            labels = clf.labels_
 
-    print(pca_result[:5])
-    print(f'Variance explain: {pca.explained_variance_ratio_}')
+        if(method == 'KMeans'):
+            clf = KMeans(n_clusters=3)
+            clf.fit(prot_vecs)
+            labels = clf.labels_
 
-    clf = KMeans(n_clusters=3)
-    clf.fit(pca_result)
-    centroids = clf.cluster_centers_
-    labels = clf.labels_
+        clusters.append([prot_vecs, labels])
 
-    print(centroids)
-    print(labels)
+    return clusters
 
+def evaluate_clusters(clusters):
+    scores = []
+    for cluster in clusters:
+        prot_vecs = cluster[0]
+        labels = cluster[1]
 
-    colors = ['g.', 'r.', 'c.', 'b.', 'k.']
-    for i in range(len(pca_result)):
-        plt.plot(pca_result[i][0], pca_result[i][1], colors[labels[i]], markersize=10)
-    plt.scatter(centroids[:,0], centroids[:,1],marker='X',s=150)
+        score = silhouette_score(prot_vecs, labels)
+        scores.append(score)
 
-    plt.show()
+    average = sum(scores) / float(len(scores))
+    print(f'Average score: {average}')
