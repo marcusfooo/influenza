@@ -11,12 +11,13 @@ data_path = './data/raw/'
 methods = ['DBSCAN', 'KMeans', 'MeanShift']
 methods = ['DBSCAN']
 
-trigram_vecs, _, _, _ = utils.read_and_process_to_trigram_vecs(data_files, data_path, sample_size=0, concat=False)
+trigram_vecs, _, _, _ = utils.read_and_process_to_trigram_vecs(data_files, data_path, sample_size=0, squeeze=False)
 
 # concated_years = [[]]
 # for year_trigram_vecs in trigram_vecs:
 #     concated_years[0] += year_trigram_vecs
 # trigram_vecs = concated_years
+
 
 print(f'Shape: {len(trigram_vecs)}x{len(trigram_vecs[0])}x{len(trigram_vecs[0][0])}')
 

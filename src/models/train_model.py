@@ -40,10 +40,6 @@ def confusion_matrix(y_true, y_pred):
 
     TP, FP, TN, FN = 0, 0, 0, 0
     for i in range(y_true.shape[0]):
-        if i ==0:
-            pass
-            #print(int(y_true[0]))
-            #print(int(y_pred[0]))
         if y_true[i] == 0 and y_pred[i] == 0:
             TN += 1
         elif y_true[i] == 0 and y_pred[i] == 1:
@@ -104,7 +100,7 @@ def train_rnn(model, epochs, learning_rate, batch_size, X, Y, X_test, Y_test):
             scores = model(X_test, model.init_hidden(Y_test.shape[0]))
             predictions = get_predictions(scores)
             
-            TP, FP, TN, FN = confusion_matrix(predictions, Y_test)
+            TP, FP, TN, FN = confusion_matrix(Y_test, predictions)
             precision = TP / (TP + FP) if TP + FP > 0 else 0
             recall = TP / (TP + FN) if TP + FN > 0 else 0
             
@@ -115,7 +111,7 @@ def train_rnn(model, epochs, learning_rate, batch_size, X, Y, X_test, Y_test):
             all_val_losses.append(val_loss)
 
         if epoch % print_interval == 0:
-            print('Epoch: %d\tTime: %.1f s\tLoss: %.4f\tAcc: %.4f\tVal loss: %.4f\tVal acc: %.4f\tPrecision: %.4f\tRecall: %.4f'
+            print(' Epoch %d\tTime %.0f s\tLoss %.3f\tAcc  %.3f\tV loss %.3f\tV acc  %.3f\tPrecis %.3f\tRecall  %.3f'
                 % (epoch, elapsed_time, epoch_loss, epoch_acc, val_loss, val_acc, precision, recall))
 
     plot_training_history(all_losses, all_val_losses, all_accs, all_val_accs)

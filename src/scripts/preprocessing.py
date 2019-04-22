@@ -34,10 +34,10 @@ trigram_idxs_by_year = build_features.trigrams_to_indexes(trigrams_by_year, trig
 print('\nIndex conversion performed.')
 print(f'Shape: {np.array(trigram_idxs_by_year).shape}')
 
-concated_trigrams_by_year = build_features.concat_trigrams(trigram_idxs_by_year)
-print('\nIndex concatenation performed.')
-print(f'Shape: {np.array(concated_trigrams_by_year).shape}')
+squeezed_trigrams_by_year = build_features.squeeze_trigrams(trigram_idxs_by_year)
+print('\nIndex squeezing performed.')
+print(f'Shape: {np.array(squeezed_trigrams_by_year).shape}')
 
-trigram_vecs = build_features.indexes_to_trigram_vecs(concated_trigrams_by_year, trigram_vecs_data)
+trigram_vecs = build_features.indexes_to_trigram_vecs(squeezed_trigrams_by_year, trigram_vecs_data)
 print('\nTrigramVec conversion performed.')
 print(f'Shape: {np.array(trigram_vecs).shape}')
