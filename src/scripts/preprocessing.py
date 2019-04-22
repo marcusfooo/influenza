@@ -16,7 +16,7 @@ print(f'Number of possible 3-grams: {len(trigram_to_idx)}')
 print(f'Dimension of TrigramVecs: {len(trigram_vecs_data[0])}')
 
 print('\n---> Reading in strains...')
-strains_by_year = make_dataset.read_strains_from(data_files, data_path)
+strains_by_year = make_dataset.read_clusters_from(data_files, data_path='./data/interim/')
 print(f'Strains from {len(data_files)} years were read.')
 print(f'Shape: {np.array(strains_by_year).shape}')
 print(f'Example strain:\n{strains_by_year[0][0]}')
