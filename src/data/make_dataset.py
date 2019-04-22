@@ -48,3 +48,23 @@ def train_test_split_strains(strains_by_year, test_split):
     test_strains.append(test)
   
   return train_strains, test_strains
+
+def read_clusters_from(data_files, start_clusters=[0], no_clusters=1,  method='DBSCAN', data_path='../data/interim/'):
+  """Reads in data and picks linked clusters"""
+  raw_strains = []
+  clusters_to_pick = start_clusters
+  for file_name in data_files:
+    df = pd.read_csv(data_path + method + '.' + file_name)
+    df = df[df.cluster.isin(clusters_to_pick)]
+
+    next_year_clusters = []
+    for cluster in clusters_to_pick:
+        string_list = df[df['cluster'] == cluster]['links'].iloc[0][1:-1].split(' ')
+        next_year_clusters += [int(i) for i in string_list]
+    clusters_to_pick = next_year_clusters[:1]
+        
+    uncertain_strains = df['seq']
+    sequences = replace_uncertain_AAs(uncertain_strains)
+    raw_strains.append(sequences)
+
+  return raw_strains
