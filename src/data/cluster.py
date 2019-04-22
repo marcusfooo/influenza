@@ -51,26 +51,26 @@ def evaluate_clusters(clusters):
     return average
 
 def link_clusters(clusters):
-    linked = []
     no_years = len(clusters)
+    neigh = NearestNeighbors(n_neighbors=2)
 
-    first_cluster = clusters[0]
-    centroids = first_cluster['centroids']
+    for year_idx in range(no_years): 
+        if(year_idx == no_years-1): # last year doesn't link
+            clusters[year_idx]['links'] = [] 
+            break 
 
-    neigh = NearestNeighbors(n_neighbors=1)
-
-    for i, centroid in enumerate(centroids):
         links = []
-        current_centroid = centroid
+        current_centroids = clusters[year_idx]['centroids']
+        next_year_centroids = clusters[year_idx+1]['centroids']
+        neigh.fit(next_year_centroids)
 
-        for year_idx in range(no_years-1):
-            year_centroids = clusters[year_idx+1]['centroids']
-            neigh.fit(year_centroids)
+        idxs_by_centroid = neigh.kneighbors(current_centroids, return_distance=False)
 
-            ind = neigh.kneighbors([current_centroid], return_distance=False)
-            current_centroid = year_centroids[ind[0][0]]
-            links.append(ind)
-        
-        linked.append(links)
+        for label in clusters[year_idx]['labels']:
+            links.append(idxs_by_centroid[label]) # centroid idx corresponds to label
 
-    return linked
+        clusters[year_idx]['links'] = links
+
+    return clusters
+
+

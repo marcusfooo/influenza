@@ -26,19 +26,20 @@ for method in methods:
     average = cluster.evaluate_clusters(clusters_by_year)
     print(f'Average variance of {method}: {average}')
 
-    # linked_clusters = cluster.link_clusters(clusters_by_year)
-    # print(linked_clusters)
+    clusters_by_year = cluster.link_clusters(clusters_by_year)
 
+    # save
     strains_by_year = make_dataset.read_strains_from(data_files, data_path)
     for i, clusters in enumerate(clusters_by_year):
         path = data_files[i]
 
         df = pd.read_csv(data_path + path)
         df['cluster'] = clusters['labels']
-        for i, centroid in enumerate(clusters['centroids']):
-            df[str(i)] = pd.Series(centroid)
 
-        path = '../data/interim/'+path
+        # if(i < len(clusters_by_year)-1): # skip last cuz it doesn't link to anything
+        df['links'] = pd.Series(clusters['links'])
+
+        path = f'./data/interim/{method}.{path}'
         print(f'saving to : {path}')
         df.to_csv(path)
 
