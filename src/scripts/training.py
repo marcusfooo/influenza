@@ -35,10 +35,12 @@ last_mutate_acc = np.sum(test_guesses == test_labels) / Y_test.shape[0]
 print('Accuracy for last mutation: %.3f' % last_mutate_acc)
 
 input_dim = X_train.shape[2]
+seq_length = X_train.shape[0]
 output_dim = 2
 hidden_size = 10
 num_of_layers = 1
-net = models.LSTMModel(input_dim, hidden_size, num_of_layers, output_dim)
+#net = models.LSTMModel(input_dim, hidden_size, num_of_layers, output_dim)
+net = models.AttentionModel(input_dim, seq_length, hidden_size, num_of_layers, output_dim)
 
 num_of_epochs = 100
 learning_rate = 0.1
