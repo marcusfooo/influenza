@@ -16,12 +16,13 @@ def plot_training_history(loss, val_loss, acc, val_acc):
     plt.style.use('ggplot')
     
     plt.figure()
+    plt.subplot(1,2,1)
     plt.plot(loss, 'b', label='Training')
     plt.plot(val_loss, 'r', label='Validation')
     plt.title('Loss')
     plt.legend()
 
-    plt.figure()
+    plt.subplot(1,2,2)
     plt.plot(acc, 'b', label='Training')
     plt.plot(val_acc, 'r', label='Validation')
     plt.title('Accuracy')
@@ -29,13 +30,13 @@ def plot_training_history(loss, val_loss, acc, val_acc):
     plt.show()
 
 
-def get_predictions(scores):
+def predictions_from_output(scores):
     prob = F.softmax(scores, dim=1)
-    _, predictions = torch.topk(prob, 1)
+    _, predictions = prob.topk(1)
     return predictions
 
 
-def confusion_matrix(y_true, y_pred):
+def get_confusion_matrix(y_true, y_pred):
     y_pred = y_pred.view_as(y_true)
 
     TP, FP, TN, FN = 0, 0, 0, 0
@@ -49,7 +50,12 @@ def confusion_matrix(y_true, y_pred):
         elif y_true[i] == 1 and y_pred[i] == 1:
             TP += 1
 
-    return TP, FP, TN, FN
+    conf_matrix = [
+        [TP, FP],
+        [FN, TN]
+    ]
+
+    return conf_matrix
             
 
 def train_rnn(model, epochs, learning_rate, batch_size, X, Y, X_test, Y_test):
@@ -84,8 +90,9 @@ def train_rnn(model, epochs, learning_rate, batch_size, X, Y, X_test, Y_test):
             loss.backward()
             optimizer.step()
 
-            predictions = get_predictions(scores)
-            TP, _, TN, _ = confusion_matrix(Y_batch, predictions)
+            predictions = predictions_from_output(scores)
+            conf_matrix = get_confusion_matrix(Y_batch, predictions)
+            TP, TN = conf_matrix[0][0], conf_matrix[1][1]
             running_acc += TP + TN
 
             running_loss += loss.item()
@@ -98,9 +105,11 @@ def train_rnn(model, epochs, learning_rate, batch_size, X, Y, X_test, Y_test):
 
         with torch.no_grad():
             scores = model(X_test, model.init_hidden(Y_test.shape[0]))
-            predictions = get_predictions(scores)
+            predictions = predictions_from_output(scores)
             
-            TP, FP, TN, FN = confusion_matrix(Y_test, predictions)
+            conf_matrix = get_confusion_matrix(Y_test, predictions)
+            TP, FP, FN, TN = conf_matrix[0][0], conf_matrix[0][1], conf_matrix[1][0], conf_matrix[1][1]
+
             precision = TP / (TP + FP) if TP + FP > 0 else 0
             recall = TP / (TP + FN) if TP + FN > 0 else 0
             

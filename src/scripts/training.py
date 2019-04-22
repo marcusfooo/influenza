@@ -32,7 +32,7 @@ majority_acc = max(counts) / Y_test.shape[0]
 print('Accuracy for majority vote: %.3f' % majority_acc)
 
 last_mutate_acc = np.sum(test_guesses == test_labels) / Y_test.shape[0]
-print('Accuracy for last mutation approach: %.3f' % last_mutate_acc)
+print('Accuracy for last mutation: %.3f' % last_mutate_acc)
 
 input_dim = X_train.shape[2]
 output_dim = 2
