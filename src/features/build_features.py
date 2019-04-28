@@ -1,6 +1,7 @@
 import pandas as pd
 import random
 import numpy as np
+from src.features.trigram import Trigram
 
 def sample_strains(strains_by_year, num_of_samples):
   """TODO: DOCSTRING"""
@@ -20,7 +21,6 @@ def split_to_trigrams(strains_by_year, overlapping=True):
   else:
     step_size = 3
     num_of_trigrams = len(strains_by_year[0][0]) // step_size
-    # TODO Handle the remainder in some way
 
   trigrams_by_year = []
   for year_strains in strains_by_year:
@@ -29,8 +29,17 @@ def split_to_trigrams(strains_by_year, overlapping=True):
     for strain in year_strains:
       strain_trigrams = []
 
-      for pos in range(num_of_trigrams):
-        strain_trigrams.append(strain[pos*step_size : pos*step_size + 3])
+      for i in range(num_of_trigrams):
+        pos = i * step_size
+        trigram = Trigram(strain[pos:pos + 3], pos)
+        strain_trigrams.append(trigram)
+
+      remainder = len(strain) % step_size
+      if remainder > 0:
+        padding = '-' * (3 - remainder)
+        amino_acids = strain[-remainder:] + padding
+        trigram = Trigram(amino_acids, len(strain) - remainder)
+        strain_trigrams.append(trigram)
 
       year_trigrams.append(strain_trigrams)
     
@@ -39,26 +48,37 @@ def split_to_trigrams(strains_by_year, overlapping=True):
   return trigrams_by_year
 
 
-def trigrams_to_indexes(trigrams_by_year, trigram_to_idx):
-  """TODO: DOCSTRING"""
-  dummy_idx = len(trigram_to_idx)
-  
-  def mapping(trigram):
-    if '-' not in trigram:
-      return trigram_to_idx[trigram]
-    else:
-      return dummy_idx
-   
-  trigrams_idxs_by_year = []
-  for year_trigrams in trigrams_by_year:
-    year_trigrams_idxs = []
+def extract_positions_by_year(positions, trigrams_by_year):
+  strain = trigrams_by_year[0][0]
+  strain_idxs_to_extract = []
+  idx = 0
 
-    for trigrams in year_trigrams:
-        year_trigrams_idxs.append(list(map(mapping, trigrams)))
-    
-    trigrams_idxs_by_year.append(year_trigrams_idxs)
-    
-  return trigrams_idxs_by_year
+  for pos in positions:
+    pos_found = False
+    while not pos_found:
+      trigram = strain[idx]
+      if trigram.contains_position(pos):
+        pos_found = True
+      else:
+        idx += 1
+
+    pos_extracted = False
+    while not pos_extracted:
+      trigram = strain[idx]
+      if trigram.contains_position(pos):
+        strain_idxs_to_extract.append(idx)
+        idx += 1
+      else:
+        pos_extracted = True
+
+  def extract_idxs(strain_trigrams):
+    return [strain_trigrams[i] for i in strain_idxs_to_extract]
+
+  extracted_by_year = []
+  for year_trigrams in trigrams_by_year:
+    extracted_by_year.append(list(map(extract_idxs, year_trigrams)))
+
+  return extracted_by_year
 
 
 def squeeze_trigrams(trigrams_by_year):
@@ -77,6 +97,46 @@ def squeeze_trigrams(trigrams_by_year):
   return squeezed_trigrams_by_year
 
 
+def map_trigrams_to_idxs(nested_trigram_list, trigram_to_idx):
+  """TODO: DOCSTRING"""
+  dummy_idx = len(trigram_to_idx)
+  
+  def mapping(trigram):
+    if isinstance(trigram, Trigram):
+      if '-' not in trigram.amino_acids:
+        return trigram_to_idx[trigram.amino_acids]
+      else:
+        return dummy_idx
+
+    elif isinstance(trigram, list):
+      return list(map(mapping, trigram))
+      
+    else:
+      raise TypeError('Expected nested list of Trigrams, but encountered {} in recursion.'.format(type(trigram)))
+   
+  return list(map(mapping, nested_trigram_list))
+
+
+def map_idxs_to_vecs(nested_idx_list, idx_to_vec):
+  """TODO: DOCSTRING"""
+  dummy_vec = np.array([0] * idx_to_vec.shape[1])
+  
+  def mapping(idx):
+    if isinstance(idx, int):
+      if idx < idx_to_vec.shape[0]:
+        return idx_to_vec[idx]
+      else:
+        return dummy_vec
+
+    elif isinstance(idx, list):
+      return list(map(mapping, idx))
+      
+    else:
+      raise TypeError('Expected nested list of ints, but encountered {} in recursion.'.format(type(idx)))
+
+  return list(map(mapping, nested_idx_list))
+
+
 def indexes_to_mutations(trigram_indexes_x, trigram_indexes_y):
   """
   Creates an numpy array containing 1's in positions where trigram_indexes_x and
@@ -90,64 +150,3 @@ def indexes_to_mutations(trigram_indexes_x, trigram_indexes_y):
         mutations[i] = 1
   
   return mutations
-
-
-def indexes_to_trigram_vecs(training_indexes, trigram_vecs_data):
-  """TODO: DOCSTRING"""
-  dummy_vec = np.array([0] * trigram_vecs_data.shape[1])
-  
-  def mapping(idx):
-    if isinstance(idx, int):
-      if idx < trigram_vecs_data.shape[0]:
-        return trigram_vecs_data[idx]
-      else:
-        return dummy_vec
-
-    elif isinstance(idx, list):
-      return list(map(mapping, idx))
-      
-    else:
-      raise TypeError('Expected nested list of ints for argument training_indexes, but encountered {} in recursion.'.format(type(idx)))
-
-  return list(map(mapping, training_indexes))
-
-
-def extract_positions_by_year(positions, strains_by_year):
-
-  extracted_by_year = []
-  for year_strains in strains_by_year:
-    year_extracted = []
-
-    for strain in year_strains:
-        year_extracted.append(extract_positions(positions, strain))
-
-    extracted_by_year.append(year_extracted)
-
-  return extracted_by_year
-
-
-def extract_positions(positions, data):
-  num_of_positons = len(positions)
-
-  # pad single positions
-  padded_positions = []
-  for i in range(num_of_positons):
-    first_pos = positions[i]
-    second_pos = positions[i+1]
-    third_pos = positions[i+2]
-    if(second_pos - first_pos > 1):
-      padded_positions += [first_pos, first_pos+1, first_pos+2]
-    elif(second_pos - first_pos == 1 and third_pos - first_pos > 2):
-      padded_positions += [first_pos, second_pos, first_pos+2]
-      i += 1
-    else:
-      padded_positions += [first_pos, second_pos, third_pos]
-      i += 2
-
-    if(i > num_of_positons-2): break
-
-  extracted_elems = ''
-  for position in padded_positions:
-      extracted_elems += data[position]
-      
-  return extracted_elems
