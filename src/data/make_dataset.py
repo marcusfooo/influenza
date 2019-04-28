@@ -61,7 +61,7 @@ def read_clusters_from(data_files, start_clusters=[0], no_clusters=1,  method='D
     for cluster in clusters_to_pick:
         string_list = df[df['cluster'] == cluster]['links'].iloc[0][1:-1].split(' ')
         next_year_clusters += [int(i) for i in string_list]
-    clusters_to_pick = next_year_clusters[:1]
+    clusters_to_pick = next_year_clusters[:no_clusters]
         
     uncertain_strains = df['seq']
     sequences = replace_uncertain_AAs(uncertain_strains)
