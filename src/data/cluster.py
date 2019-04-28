@@ -4,29 +4,31 @@ from sklearn.cluster import DBSCAN
 from sklearn.metrics import silhouette_score
 from sklearn.neighbors.nearest_centroid import NearestCentroid
 from sklearn.neighbors import NearestNeighbors
+from sklearn import preprocessing
 
 import numpy as np
 from math import floor
 
-def cluster_years(trigram_vecs, method='DBSCAN', remove_outliers=False):
+def cluster_years(trigram_vecs, method='DBSCAN', metric='euclidean', remove_outliers=False, sum_to_protvecs=True):
     clusters = []
     for year_trigram_vecs in trigram_vecs:
-        prot_vecs = np.array(year_trigram_vecs).sum(axis=1)
+        if(sum_to_protvecs):
+            year_trigram_vecs = np.array(year_trigram_vecs).sum(axis=1)
 
         if(method == 'DBSCAN'):
             min_samples = floor(len(year_trigram_vecs)*0.01)
-            clf = DBSCAN(eps=5, min_samples=min_samples, metric='euclidean').fit(prot_vecs)
+            clf = DBSCAN(eps=5, min_samples=min_samples, metric=metric).fit(year_trigram_vecs)
             labels = clf.labels_
-            centroids = NearestCentroid().fit(prot_vecs, labels).centroids_
+            centroids = NearestCentroid().fit(year_trigram_vecs, labels).centroids_
 
         if(method == 'MeanShift'):
-            clf = MeanShift().fit(prot_vecs)
+            clf = MeanShift().fit(year_trigram_vecs)
             labels = clf.labels_
             centroids = clf.cluster_centers_
 
         if(method == 'KMeans'):
             clf = KMeans(n_clusters=3)
-            clf.fit(prot_vecs)
+            clf.fit(year_trigram_vecs)
             labels = clf.labels_
             centroids = clf.cluster_centers_
 
@@ -34,10 +36,10 @@ def cluster_years(trigram_vecs, method='DBSCAN', remove_outliers=False):
             idxs_to_remove = []
             for i, label in enumerate(labels):
                 if(label == -1): idxs_to_remove.append(i)
-            prot_vecs = [prot_vec for i, prot_vec in enumerate(prot_vecs) if i not in idxs_to_remove]
+            year_trigram_vecs = [prot_vec for i, prot_vec in enumerate(year_trigram_vecs) if i not in idxs_to_remove]
             labels = [label for i, label in enumerate(labels) if i not in idxs_to_remove]
 
-        clusters.append({'prot_vecs':prot_vecs, 'labels':labels, 'centroids':centroids})
+        clusters.append({'prot_vecs':year_trigram_vecs, 'labels':labels, 'centroids':centroids})
 
     return clusters
 
@@ -73,4 +75,17 @@ def link_clusters(clusters):
 
     return clusters
 
+def label_encode(strains_by_year):
+    le = preprocessing.LabelEncoder()
+    le.fit(list(strains_by_year[0][0]))
 
+    encoded_strains = []
+    for year_strains in strains_by_year:
+        year_encoded_strains = []
+        for strain in year_strains:
+            chars = list(strain)
+            year_encoded_strains.append(le.transform(chars))
+
+        encoded_strains.append(year_encoded_strains)
+
+    return encoded_strains
