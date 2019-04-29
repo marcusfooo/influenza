@@ -9,7 +9,7 @@ from sklearn import preprocessing
 import numpy as np
 from math import floor
 
-def cluster_years(prot_vecs, method='DBSCAN', remove_outliers=False):
+def cluster_years(prot_vecs, method='DBSCAN'):
     clusters = []
     for year_prot_vecs in prot_vecs:
 
@@ -30,13 +30,6 @@ def cluster_years(prot_vecs, method='DBSCAN', remove_outliers=False):
             labels = clf.labels_
             centroids = clf.cluster_centers_
 
-        if(remove_outliers):
-            idxs_to_remove = []
-            for i, label in enumerate(labels):
-                if(label == -1): idxs_to_remove.append(i)
-            year_prot_vecs = [prot_vec for i, prot_vec in enumerate(year_prot_vecs) if i not in idxs_to_remove]
-            labels = [label for i, label in enumerate(labels) if i not in idxs_to_remove]
-
         clusters.append({'prot_vecs':year_prot_vecs, 'labels':labels, 'centroids':centroids})
 
     return clusters
@@ -47,6 +40,16 @@ def squeeze_to_prot_vecs(trigram_vecs):
         year_trigram_vecs = np.array(year_trigram_vecs).sum(axis=1)
         prot_vecs.append(year_trigram_vecs)
     return prot_vecs
+
+def remove_outliers(clusters):
+    for year_idx, cluster in enumerate(clusters):
+        idxs_to_remove = []
+        for i, label in enumerate(cluster['labels']):
+            if(label == -1): idxs_to_remove.append(i)
+        clusters[year_idx]['prot_vecs'] = [prot_vec for i, prot_vec in enumerate(cluster['prot_vecs']) if i not in idxs_to_remove]
+        clusters[year_idx]['labels'] = [label for i, label in enumerate(cluster['labels']) if i not in idxs_to_remove]
+
+    return clusters
         
 def evaluate_clusters(clusters):
     scores = []
