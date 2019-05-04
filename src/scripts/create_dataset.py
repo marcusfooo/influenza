@@ -25,8 +25,8 @@ def main():
   train_strains_by_year = build_features.sample_strains(train_strains_by_year, training_samples)
   test_strains_by_year = build_features.sample_strains(test_strains_by_year, test_samples)
 
-  create_triplet_trigram_dataset(train_strains_by_year, trigram_to_idx, trigram_vecs_data, epitope_positions, file_path=(data_path + '/triplet_train_data.csv'))
-  create_triplet_trigram_dataset(test_strains_by_year, trigram_to_idx, trigram_vecs_data, epitope_positions, file_path=(data_path + '/triplet_test_data.csv'))
+  create_triplet_trigram_dataset(train_strains_by_year, trigram_to_idx, trigram_vecs_data, epitope_positions, file_path=('./data/processed/triplet_train_data.csv'))
+  create_triplet_trigram_dataset(test_strains_by_year, trigram_to_idx, trigram_vecs_data, epitope_positions, file_path=('./data/processed/triplet_test_data.csv'))
 
 
 def create_triplet_trigram_dataset(strains_by_year, trigram_to_idx, trigram_vecs_data, epitope_positions, file_path):
@@ -43,7 +43,7 @@ def create_triplet_trigram_dataset(strains_by_year, trigram_to_idx, trigram_vecs
   for year in range(len(triplet_strains_by_year)):
     data_dict[year] = trigram_idxs[year]
 
-  pd.DataFrame(data_dict).to_csv(file_path)
+  pd.DataFrame(data_dict).to_csv(file_path, index=False)
 
 
 if __name__ == '__main__':
