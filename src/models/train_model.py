@@ -71,7 +71,35 @@ def get_confusion_matrix(y_true, y_pred):
     ]
 
     return conf_matrix
-            
+
+
+def verify_model(model, X, Y, criterion):
+    X.requires_grad_()
+    criterion = torch.nn.CrossEntropyLoss()
+    scores = model(X, model.init_hidden(Y.shape[0]))
+    print('Loss @ init: %.3f' % criterion(scores, Y).item())
+
+    non_zero_idx = 1
+    perfect_scores = [[0, 0] for y in Y]
+    not_perfect_scores = [[1, 1] if i == non_zero_idx else [0, 0] for i, y in enumerate(Y)]
+
+    scores.data = torch.FloatTensor(not_perfect_scores)
+    Y_perfect = torch.FloatTensor(perfect_scores)
+    criterion = torch.nn.MSELoss()
+    loss = criterion(scores, Y_perfect)
+    loss.backward()
+
+    zero_tensor = torch.FloatTensor([0] * X.shape[2])
+    for i in range(X.shape[0]):
+        for j in range(X.shape[1]):
+                if sum(X.grad[i, j] != zero_tensor):
+                    assert(j == non_zero_idx)
+                else:
+                    assert(j != non_zero_idx)
+
+    print('Backpropagated dependencies OK')
+    X.detach()
+
 
 def train_rnn(model, epochs, learning_rate, batch_size, X, Y, X_test, Y_test):
     print_interval = 10
@@ -81,14 +109,12 @@ def train_rnn(model, epochs, learning_rate, batch_size, X, Y, X_test, Y_test):
     num_of_examples = X.shape[1]
     num_of_batches = math.floor(num_of_examples/batch_size)
 
+    verify_model(model, X, Y, criterion)
+
     all_losses = []
     all_val_losses = []
     all_accs = []
     all_val_accs = []
-
-    with torch.no_grad():
-        scores = model(X_test, model.init_hidden(Y_test.shape[0]))
-        print('Loss @ init: %.3f' % criterion(scores, Y_test).item())
 
     X_test_mini_batch = X_test[:, 184:192, :]
     Y_test_mini_batch = Y_test[184:192]
