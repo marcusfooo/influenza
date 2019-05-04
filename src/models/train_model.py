@@ -12,21 +12,36 @@ def repackage_hidden(h):
             return tuple(repackage_hidden(v) for v in h)
 
 
-def plot_training_history(loss, val_loss, acc, val_acc):
+def plot_training_history(loss, val_loss, acc, val_acc, mini_batch_scores, mini_batch_labels):
     plt.style.use('ggplot')
     
+    # Plot losses
     plt.figure()
-    plt.subplot(1,2,1)
+    plt.subplot(1,3,1)
     plt.plot(loss, 'b', label='Training')
     plt.plot(val_loss, 'r', label='Validation')
     plt.title('Loss')
     plt.legend()
 
-    plt.subplot(1,2,2)
+    # Plot accuracies
+    plt.subplot(1,3,2)
     plt.plot(acc, 'b', label='Training')
     plt.plot(val_acc, 'r', label='Validation')
     plt.title('Accuracy')
     plt.legend()
+
+    # Plot prediction dynamics of test mini batch
+    plt.subplot(1,3,3)
+    for i in range(len(mini_batch_labels)):
+        if mini_batch_labels[i]:
+            score_sequence = [x[i][1] for x in mini_batch_scores]
+            plt.plot(score_sequence, 'b', label='Pos')
+        else:
+            score_sequence = [x[i][0] for x in mini_batch_scores]
+            plt.plot(score_sequence, 'r', label='Neg')
+    
+    plt.title('Logits')
+    plt.legend(labels=['Pos', 'Neg'])
     plt.show()
 
 
@@ -60,7 +75,7 @@ def get_confusion_matrix(y_true, y_pred):
 
 def train_rnn(model, epochs, learning_rate, batch_size, X, Y, X_test, Y_test):
     print_interval = 10
-    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
     criterion = torch.nn.CrossEntropyLoss()
     num_of_examples = X.shape[1]
@@ -71,6 +86,14 @@ def train_rnn(model, epochs, learning_rate, batch_size, X, Y, X_test, Y_test):
     all_accs = []
     all_val_accs = []
 
+    with torch.no_grad():
+        scores = model(X_test, model.init_hidden(Y_test.shape[0]))
+        print('Loss @ init: %.3f' % criterion(scores, Y_test).item())
+
+    X_test_mini_batch = X_test[:, 184:192, :]
+    Y_test_mini_batch = Y_test[184:192]
+    mini_batch_scores = []
+
     start_time = time.time()
     for epoch in range(epochs):
         running_loss = 0
@@ -78,7 +101,7 @@ def train_rnn(model, epochs, learning_rate, batch_size, X, Y, X_test, Y_test):
 
         hidden = model.init_hidden(batch_size)
 
-        for count in range(0, num_of_examples - batch_size, batch_size):
+        for count in range(0, num_of_examples - batch_size + 1, batch_size):
             optimizer.zero_grad()
             repackage_hidden(hidden)
 
@@ -119,8 +142,11 @@ def train_rnn(model, epochs, learning_rate, batch_size, X, Y, X_test, Y_test):
             val_loss = criterion(scores, Y_test).item()
             all_val_losses.append(val_loss)
 
+            mini_batch_scores.append(model(X_test_mini_batch, model.init_hidden(Y_test_mini_batch.shape[0])))
+
+
         if epoch % print_interval == 0:
             print(' Epoch %d\tTime %.0f s\tLoss %.3f\tAcc  %.3f\tV loss %.3f\tV acc  %.3f\tPrecis %.3f\tRecall  %.3f'
                 % (epoch, elapsed_time, epoch_loss, epoch_acc, val_loss, val_acc, precision, recall))
 
-    plot_training_history(all_losses, all_val_losses, all_accs, all_val_accs)
+    plot_training_history(all_losses, all_val_losses, all_accs, all_val_accs, mini_batch_scores, Y_test_mini_batch)
