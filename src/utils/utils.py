@@ -1,6 +1,9 @@
+import math
+import ast
+import pandas as pd
+import numpy as np
 from src.data import make_dataset
 from src.features import build_features
-import math
 
 def read_and_process_to_trigram_vecs(data_files, data_path='../data/raw/', sample_size=100, test_split=0.0, squeeze=True, extract_epitopes=False):
   trigram_to_idx, trigram_vecs_data = make_dataset.read_trigram_vecs(data_path)
@@ -45,3 +48,16 @@ def process_years(strains_by_year, squeeze, extract_epitopes, trigram_to_idx, tr
   trigram_vecs = build_features.map_idxs_to_vecs(trigram_idxs, trigram_vecs_data)
 
   return trigram_vecs, trigram_idxs
+
+
+def read_dataset(path):
+  _, trigram_vecs_data = make_dataset.read_trigram_vecs('./data/raw/')
+
+  df = pd.read_csv(path)
+  labels = df['y'].values
+  trigram_idx_strings = df.loc[:, df.columns != 'y'].values
+  parsed_trigram_idxs = [list(map(lambda x: ast.literal_eval(x), example)) for example in trigram_idx_strings]
+  trigram_vecs = np.array(build_features.map_idxs_to_vecs(parsed_trigram_idxs, trigram_vecs_data))
+  trigram_vecs_concatenated = np.reshape(trigram_vecs, [len(df.columns) - 1, len(df.index), -1])
+
+  return trigram_vecs_concatenated, labels
