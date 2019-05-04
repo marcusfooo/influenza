@@ -72,16 +72,36 @@ def make_triplet_strains(strains_by_year, positions):
 
 def make_triplet_labels(triplet_strains_by_year):
   num_of_triplets = len(triplet_strains_by_year[0])
-  epitope = 2
+  epitope_position = 2
 
   labels = []
   for i in range(num_of_triplets):
-    if triplet_strains_by_year[-1][i][epitope] == triplet_strains_by_year[-2][i][epitope]:
+    if triplet_strains_by_year[-1][i][epitope_position] == triplet_strains_by_year[-2][i][epitope_position]:
       labels.append(0)
     else:
       labels.append(1)
 
   return labels
+
+
+def get_majority_baseline(triplet_strains_by_year, labels):
+  epitope_position = 2
+
+  correct = 0
+  for i in range(len(labels)):
+    epitopes = []
+    for year in range(len(triplet_strains_by_year) - 1):
+      epitopes.append(triplet_strains_by_year[year][i][epitope_position])
+    majority_epitope = max(set(epitopes), key = epitopes.count)
+
+    if triplet_strains_by_year[-2][i][epitope_position] == majority_epitope:
+      if not labels[i]:
+        correct += 1
+    else:
+      if labels[i]:
+        correct += 1
+
+  return correct / len(labels)
 
 
 def extract_positions_by_year(positions, trigrams_by_year):
