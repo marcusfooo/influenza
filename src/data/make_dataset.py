@@ -9,7 +9,7 @@ def read_trigram_vecs(data_path='../data/raw/'):
   df = pd.read_csv(data_path + prot_vec_file, delimiter = '\t')
   trigrams = list(df['words'])
   trigram_to_idx = {trigram: i for i, trigram in enumerate(trigrams)}
-  trigram_vecs = df.loc[:, df.columns != 'words'].values  
+  trigram_vecs = df.loc[:, df.columns != 'words'].values
   
   return trigram_to_idx, trigram_vecs
 
@@ -18,9 +18,9 @@ def read_strains_from(data_files, data_path='../data/raw/'):
   raw_strains = []
   for file_name in data_files:
     df = pd.read_csv(data_path + file_name)
-    uncertain_strains = df['seq']
-    sequences = replace_uncertain_AAs(uncertain_strains)
-    raw_strains.append(sequences)
+    strains = df['seq']
+    #sequences = replace_uncertain_AAs(strains) Do this in build_features instead
+    raw_strains.append(strains)
     
   return raw_strains
 

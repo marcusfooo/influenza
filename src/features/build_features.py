@@ -48,6 +48,42 @@ def split_to_trigrams(strains_by_year, overlapping=True):
   return trigrams_by_year
 
 
+def make_triplet_strains(strains_by_year, positions):
+  triplet_strains_by_year = []
+  triplet_strain_margin = 2
+
+  for strains_in_year in strains_by_year:
+    triplet_strains_in_year = []
+    for strain in strains_in_year:
+      for p in positions:
+        if p < triplet_strain_margin:
+          padding_size = triplet_strain_margin - p
+          triplet_strain = '-' * padding_size + strain[:p + triplet_strain_margin + 1]
+        elif p > len(strain) - 1 - triplet_strain_margin:
+          padding_size = p - (len(strain) - 1 - triplet_strain_margin)
+          triplet_strain = strain[p - triplet_strain_margin:] + '-' * padding_size
+        else:
+          triplet_strain = strain[p - triplet_strain_margin:p + triplet_strain_margin + 1]
+        triplet_strains_in_year.append(triplet_strain)
+    triplet_strains_by_year.append(triplet_strains_in_year)
+
+  return triplet_strains_by_year
+
+
+def make_triplet_labels(triplet_strains_by_year):
+  num_of_triplets = len(triplet_strains_by_year[0])
+  epitope = 2
+
+  labels = []
+  for i in range(num_of_triplets):
+    if triplet_strains_by_year[-1][i][epitope] == triplet_strains_by_year[-2][i][epitope]:
+      labels.append(0)
+    else:
+      labels.append(1)
+
+  return labels
+
+
 def extract_positions_by_year(positions, trigrams_by_year):
   strain = trigrams_by_year[0][0]
   strain_idxs_to_extract = []
@@ -97,12 +133,26 @@ def squeeze_trigrams(trigrams_by_year):
   return squeezed_trigrams_by_year
 
 
+def replace_uncertain_amino_acids(amino_acids):
+  replacements = {'B': 'DN',
+                  'J': 'IL',
+                  'Z': 'EQ',
+                  'X': 'ACDEFGHIKLMNPQRSTVWY'}
+
+  for uncertain in replacements.keys():
+    amino_acids = amino_acids.replace(uncertain, random.choice(replacements[uncertain]))
+
+  return amino_acids
+
+
 def map_trigrams_to_idxs(nested_trigram_list, trigram_to_idx):
   """TODO: DOCSTRING"""
   dummy_idx = len(trigram_to_idx)
   
   def mapping(trigram):
     if isinstance(trigram, Trigram):
+      trigram.amino_acids = replace_uncertain_amino_acids(trigram.amino_acids)
+
       if '-' not in trigram.amino_acids:
         return trigram_to_idx[trigram.amino_acids]
       else:
