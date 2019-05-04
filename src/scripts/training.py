@@ -11,38 +11,31 @@ import operator
 torch.manual_seed(1)
 np.random.seed(1)
 
-data_path = './data/raw/'
-train_files = ['2011.csv', '2012.csv', '2013.csv', '2014.csv', '2015.csv', '2016.csv']
-train_trigram_vecs, test_trigram_vecs, train_trigram_idxs, test_trigram_idxs = utils.read_and_process_to_trigram_vecs(train_files, data_path, sample_size=625, test_split=0.2)
+train_trigram_vecs, train_labels = utils.read_dataset('./data/processed/triplet_train_data.csv')
+test_trigram_vecs, test_labels = utils.read_dataset('./data/processed/triplet_test_data.csv')
 
-train_trigram_vecs = np.array(train_trigram_vecs)
-test_trigram_vecs = np.array(test_trigram_vecs)
-train_labels = build_features.indexes_to_mutations(train_trigram_idxs[-2], train_trigram_idxs[-1])
-test_labels = build_features.indexes_to_mutations(test_trigram_idxs[-2], test_trigram_idxs[-1])
-test_guesses = build_features.indexes_to_mutations(test_trigram_idxs[-3], test_trigram_idxs[-2])
-
-X_train = torch.FloatTensor(train_trigram_vecs)
-Y_train = torch.LongTensor(train_labels)
+X_train = torch.FloatTensor(train_trigram_vecs[:, :8192])
+Y_train = torch.LongTensor(train_labels[:8192])
 X_test = torch.FloatTensor(test_trigram_vecs)
 Y_test = torch.LongTensor(test_labels)
 
 #%% Training model
+_, counts = np.unique(Y_train, return_counts=True)
+imbalance = max(counts) / Y_train.shape[0]
+print('Training class imbalance: %.3f' % imbalance)
 _, counts = np.unique(Y_test, return_counts=True)
-majority_acc = max(counts) / Y_test.shape[0]
-print('Accuracy for majority vote: %.3f' % majority_acc)
-
-last_mutate_acc = np.sum(test_guesses == test_labels) / Y_test.shape[0]
-print('Accuracy for last mutation: %.3f' % last_mutate_acc)
+imbalance = max(counts) / Y_test.shape[0]
+print('Testing class imbalance:  %.3f' % imbalance)
 
 input_dim = X_train.shape[2]
 seq_length = X_train.shape[0]
 output_dim = 2
-hidden_size = 10
+hidden_size = 5
 num_of_layers = 1
-#net = models.LSTMModel(input_dim, hidden_size, num_of_layers, output_dim)
-net = models.AttentionModel(input_dim, seq_length, hidden_size, num_of_layers, output_dim)
+net = models.LSTMModel(input_dim, hidden_size, num_of_layers, output_dim)
+#net = models.AttentionModel(input_dim, seq_length, hidden_size, num_of_layers, output_dim)
 
 num_of_epochs = 100
-learning_rate = 0.1
+learning_rate = 0.01
 batch_size = 256
 train_model.train_rnn(net, num_of_epochs, learning_rate, batch_size, X_train, Y_train, X_test, Y_test)
