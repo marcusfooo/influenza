@@ -1,7 +1,6 @@
 def get_confusion_matrix(y_true, y_pred):
-    y_pred = y_pred.view_as(y_true)
-
     TP, FP, TN, FN = 0, 0, 0, 0
+    
     for i in range(y_true.shape[0]):
         if y_true[i] == 0 and y_pred[i] == 0:
             TN += 1

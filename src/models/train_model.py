@@ -119,7 +119,7 @@ def train_rnn(model, verify, epochs, learning_rate, batch_size, X, Y, X_test, Y_
             optimizer.step()
 
             predictions = predictions_from_output(scores)
-            conf_matrix = get_confusion_matrix(Y_batch, predictions)
+            conf_matrix = validation.get_confusion_matrix(Y_batch, predictions)
             TP, TN = conf_matrix[0][0], conf_matrix[1][1]
             running_acc += TP + TN
             running_loss += loss.item()
@@ -133,6 +133,7 @@ def train_rnn(model, verify, epochs, learning_rate, batch_size, X, Y, X_test, Y_
         with torch.no_grad():
             scores = model(X_test, model.init_hidden(Y_test.shape[0]))
             predictions = predictions_from_output(scores)
+            predictions = predictions.view_as(Y_test)
             
             conf_matrix = validation.get_confusion_matrix(Y_test, predictions)
             precision = validation.get_precision(conf_matrix)
