@@ -93,15 +93,13 @@ def verify_model(model, X, Y, criterion):
     for i in range(X.shape[0]):
         for j in range(X.shape[1]):
                 if sum(X.grad[i, j] != zero_tensor):
-                    assert(j == non_zero_idx)
-                else:
-                    assert(j != non_zero_idx)
+                    assert j == non_zero_idx, 'Input with loss set to zero has non-zero gradient.'
 
     print('Backpropagated dependencies OK')
     X.detach()
 
 
-def train_rnn(model, epochs, learning_rate, batch_size, X, Y, X_test, Y_test):
+def train_rnn(model, verify, epochs, learning_rate, batch_size, X, Y, X_test, Y_test):
     print_interval = 10
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
@@ -109,7 +107,8 @@ def train_rnn(model, epochs, learning_rate, batch_size, X, Y, X_test, Y_test):
     num_of_examples = X.shape[1]
     num_of_batches = math.floor(num_of_examples/batch_size)
 
-    verify_model(model, X, Y, criterion)
+    if verify:
+        verify_model(model, X, Y, criterion)
 
     all_losses = []
     all_val_losses = []
@@ -128,7 +127,6 @@ def train_rnn(model, epochs, learning_rate, batch_size, X, Y, X_test, Y_test):
         hidden = model.init_hidden(batch_size)
 
         for count in range(0, num_of_examples - batch_size + 1, batch_size):
-            optimizer.zero_grad()
             repackage_hidden(hidden)
 
             X_batch = X[:, count:count+batch_size, :]
@@ -136,6 +134,8 @@ def train_rnn(model, epochs, learning_rate, batch_size, X, Y, X_test, Y_test):
 
             scores = model(X_batch, hidden)
             loss = criterion(scores, Y_batch)
+
+            optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
@@ -143,7 +143,6 @@ def train_rnn(model, epochs, learning_rate, batch_size, X, Y, X_test, Y_test):
             conf_matrix = get_confusion_matrix(Y_batch, predictions)
             TP, TN = conf_matrix[0][0], conf_matrix[1][1]
             running_acc += TP + TN
-
             running_loss += loss.item()
 
         elapsed_time = time.time() - start_time
@@ -161,6 +160,7 @@ def train_rnn(model, epochs, learning_rate, batch_size, X, Y, X_test, Y_test):
 
             precision = TP / (TP + FP) if TP + FP > 0 else 0
             recall = TP / (TP + FN) if TP + FN > 0 else 0
+            fscore = 2 * precision * recall / (precision + recall) if precision + recall > 0 else 0
             
             val_acc = (TP + TN) / (TP + FP + TN + FN)
             all_val_accs.append(val_acc)
@@ -172,7 +172,7 @@ def train_rnn(model, epochs, learning_rate, batch_size, X, Y, X_test, Y_test):
 
 
         if epoch % print_interval == 0:
-            print(' Epoch %d\tTime %.0f s\tLoss %.3f\tAcc  %.3f\tV loss %.3f\tV acc  %.3f\tPrecis %.3f\tRecall  %.3f'
-                % (epoch, elapsed_time, epoch_loss, epoch_acc, val_loss, val_acc, precision, recall))
+            print(' Epoch %d\tTime %.0f s\tLoss %.3f\tAcc  %.3f\tV loss %.3f\tV acc  %.3f\tPrecis %.3f\tRecall  %.3f\tFscore  %.3f'
+                % (epoch, elapsed_time, epoch_loss, epoch_acc, val_loss, val_acc, precision, recall, fscore))
 
     plot_training_history(all_losses, all_val_losses, all_accs, all_val_accs, mini_batch_scores, Y_test_mini_batch)
