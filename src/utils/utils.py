@@ -4,10 +4,9 @@ import pandas as pd
 import numpy as np
 from src.data import make_dataset
 from src.features import build_features
+from src.data import cluster
 
 def read_and_process_to_trigram_vecs(data_files, data_path='../data/raw/', sample_size=100, test_split=0.0, squeeze=True, extract_epitopes=False):
-  trigram_to_idx, trigram_vecs_data = make_dataset.read_trigram_vecs(data_path)
-
   strains_by_year = make_dataset.read_strains_from(data_files, data_path)
 
   train_strains_by_year, test_strains_by_year = make_dataset.train_test_split_strains(strains_by_year, test_split)
@@ -20,14 +19,14 @@ def read_and_process_to_trigram_vecs(data_files, data_path='../data/raw/', sampl
   if test_samples > 0:
     test_strains_by_year = build_features.sample_strains(test_strains_by_year, test_samples)
   
-  train_trigram_vecs, train_trigram_idxs = process_years(train_strains_by_year, squeeze, extract_epitopes, trigram_to_idx, trigram_vecs_data)
-  test_trigram_vecs, test_trigram_idxs = process_years(test_strains_by_year, squeeze, extract_epitopes, trigram_to_idx, trigram_vecs_data)
+  train_trigram_vecs, train_trigram_idxs = process_years(train_strains_by_year, data_path, squeeze, extract_epitopes)
+  test_trigram_vecs, test_trigram_idxs = process_years(test_strains_by_year, data_path, squeeze, extract_epitopes)
 
   return train_trigram_vecs, test_trigram_vecs, train_trigram_idxs, test_trigram_idxs
 
-
-def process_years(strains_by_year, squeeze, extract_epitopes, trigram_to_idx, trigram_vecs_data):
+def process_years(strains_by_year, data_path, squeeze=True, extract_epitopes=False):
   if(len(strains_by_year[0]) == 0): return [],[]
+  trigram_to_idx, trigram_vecs_data = make_dataset.read_trigram_vecs(data_path)
   trigrams_by_year = build_features.split_to_trigrams(strains_by_year)
 
   if extract_epitopes:
@@ -45,9 +44,29 @@ def process_years(strains_by_year, squeeze, extract_epitopes, trigram_to_idx, tr
     trigrams_by_year = build_features.squeeze_trigrams(trigrams_by_year)
 
   trigram_idxs = build_features.map_trigrams_to_idxs(trigrams_by_year, trigram_to_idx)
+
   trigram_vecs = build_features.map_idxs_to_vecs(trigram_idxs, trigram_vecs_data)
 
   return trigram_vecs, trigram_idxs
+
+def cluster_years(strains_by_year, data_path):
+  trigram_vecs_by_year, _ = process_years(strains_by_year, data_path, squeeze=False, extract_epitopes=False)
+  prot_vecs_by_year = cluster.squeeze_to_prot_vecs(trigram_vecs_by_year)
+  clusters_by_year = cluster.cluster_years(prot_vecs_by_year)
+  # clusters_by_year = cluster.remove_outliers(clusters_by_year)
+  clusters_by_year = cluster.link_clusters(clusters_by_year) 
+
+  return clusters_by_year
+
+def sample_from_clusters(clusters_by_years, sample_size):
+  first_year_clusters = clusters_by_years[0]
+  counted_clusters = [0] * len(first_year_clusters['centroids'])
+
+  labels = first_year_clusters['labels']
+  for label in labels:
+      counted_clusters[label] += 1
+
+  print(counted_clusters)
 
 
 def read_dataset(path):
