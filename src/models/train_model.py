@@ -3,6 +3,7 @@ import torch.nn.functional as F
 import math
 import time
 import matplotlib.pyplot as plt
+from src.utils import validation
 
 def repackage_hidden(h):
         """Wraps hidden states in new Tensors, to detach them from their history."""
@@ -49,28 +50,6 @@ def predictions_from_output(scores):
     prob = F.softmax(scores, dim=1)
     _, predictions = prob.topk(1)
     return predictions
-
-
-def get_confusion_matrix(y_true, y_pred):
-    y_pred = y_pred.view_as(y_true)
-
-    TP, FP, TN, FN = 0, 0, 0, 0
-    for i in range(y_true.shape[0]):
-        if y_true[i] == 0 and y_pred[i] == 0:
-            TN += 1
-        elif y_true[i] == 0 and y_pred[i] == 1:
-            FP += 1
-        elif y_true[i] == 1 and y_pred[i] == 0:
-            FN += 1
-        elif y_true[i] == 1 and y_pred[i] == 1:
-            TP += 1
-
-    conf_matrix = [
-        [TP, FP],
-        [FN, TN]
-    ]
-
-    return conf_matrix
 
 
 def verify_model(model, X, Y):
@@ -155,18 +134,15 @@ def train_rnn(model, verify, epochs, learning_rate, batch_size, X, Y, X_test, Y_
             scores = model(X_test, model.init_hidden(Y_test.shape[0]))
             predictions = predictions_from_output(scores)
             
-            conf_matrix = get_confusion_matrix(Y_test, predictions)
-            TP, FP, FN, TN = conf_matrix[0][0], conf_matrix[0][1], conf_matrix[1][0], conf_matrix[1][1]
-
-            precision = TP / (TP + FP) if TP + FP > 0 else 0
-            recall = TP / (TP + FN) if TP + FN > 0 else 0
-            fscore = 2 * precision * recall / (precision + recall) if precision + recall > 0 else 0
-            
-            val_acc = (TP + TN) / (TP + FP + TN + FN)
-            all_val_accs.append(val_acc)
+            conf_matrix = validation.get_confusion_matrix(Y_test, predictions)
+            precision = validation.get_precision(conf_matrix)
+            recall = validation.get_recall(conf_matrix)
+            fscore = validation.get_f1score(conf_matrix)
+            val_acc = validation.get_accuracy(conf_matrix)
 
             val_loss = criterion(scores, Y_test).item()
             all_val_losses.append(val_loss)
+            all_val_accs.append(val_acc)
 
             mini_batch_scores.append(model(X_test_mini_batch, model.init_hidden(Y_test_mini_batch.shape[0])))
 
