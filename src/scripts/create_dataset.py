@@ -25,11 +25,11 @@ def main():
   train_strains_by_year = build_features.sample_strains(train_strains_by_year, training_samples)
   test_strains_by_year = build_features.sample_strains(test_strains_by_year, test_samples)
 
-  create_triplet_trigram_dataset(train_strains_by_year, trigram_to_idx, epitope_positions, file_path=('./data/processed/triplet_train_data.csv'))
-  create_triplet_trigram_dataset(test_strains_by_year, trigram_to_idx, epitope_positions, file_path=('./data/processed/triplet_test_data.csv'))
+  create_triplet_trigram_dataset(train_strains_by_year, trigram_to_idx, epitope_positions, file_name=('./data/processed/triplet_train'))
+  create_triplet_trigram_dataset(test_strains_by_year, trigram_to_idx, epitope_positions, file_name=('./data/processed/triplet_test'))
 
 
-def create_triplet_trigram_dataset(strains_by_year, trigram_to_idx, epitope_positions, file_path):
+def create_triplet_trigram_dataset(strains_by_year, trigram_to_idx, epitope_positions, file_name):
   """Creates a dataset in csv format.
   X: Time series of three overlapping trigram vectors, one example for each epitope.
   Y: 0 if epitope does not mutate, 1 if it does.
@@ -38,13 +38,19 @@ def create_triplet_trigram_dataset(strains_by_year, trigram_to_idx, epitope_posi
   trigrams_by_year = build_features.split_to_trigrams(triplet_strains_by_year)
   trigram_idxs = build_features.map_trigrams_to_idxs(trigrams_by_year, trigram_to_idx)
   labels = build_features.make_triplet_labels(triplet_strains_by_year)
-  print('Majority voting baseline accuracy: %.3f' % build_features.get_majority_baseline(triplet_strains_by_year, labels))
+
+  acc, p, r, f1 = build_features.get_majority_baselines(triplet_strains_by_year, labels)
+  with open(file_name + '_baseline.txt', 'w') as f:
+    f.write(' Accuracy:\t%.3f\n' % acc)
+    f.write(' Precision:\t%.3f\n' % p)
+    f.write(' Recall:\t%.3f\n' % r)
+    f.write(' F1-score:\t%.3f' % f1)
 
   data_dict = {'y': labels}
   for year in range(len(triplet_strains_by_year)):
     data_dict[year] = trigram_idxs[year]
 
-  pd.DataFrame(data_dict).to_csv(file_path, index=False)
+  pd.DataFrame(data_dict).to_csv(file_name + '.csv', index=False)
 
 
 if __name__ == '__main__':

@@ -2,6 +2,7 @@ import pandas as pd
 import random
 import numpy as np
 from src.features.trigram import Trigram
+from src.utils import validation
 
 def sample_strains(strains_by_year, num_of_samples):
   """TODO: DOCSTRING"""
@@ -84,24 +85,34 @@ def make_triplet_labels(triplet_strains_by_year):
   return labels
 
 
-def get_majority_baseline(triplet_strains_by_year, labels):
+def get_majority_baselines(triplet_strains_by_year, labels):
+  """
+  Returns accuracy, precision, recall and f1-score for the baseline
+  approach of simply predicting mutation epitope in the last year
+  differs from the majority one.
+  """
   epitope_position = 2
 
-  correct = 0
+  predictions = []
   for i in range(len(labels)):
     epitopes = []
     for year in range(len(triplet_strains_by_year) - 1):
       epitopes.append(triplet_strains_by_year[year][i][epitope_position])
     majority_epitope = max(set(epitopes), key = epitopes.count)
 
-    if triplet_strains_by_year[-2][i][epitope_position] == majority_epitope:
-      if not labels[i]:
-        correct += 1
-    else:
-      if labels[i]:
-        correct += 1
 
-  return correct / len(labels)
+    if triplet_strains_by_year[-2][i][epitope_position] == majority_epitope:
+      predictions.append(0)
+    else:
+      predictions.append(1)
+
+  conf_matrix = validation.get_confusion_matrix(np.array(labels), np.array(predictions))
+  acc = validation.get_accuracy(conf_matrix)
+  precision = validation.get_precision(conf_matrix)
+  recall = validation.get_recall(conf_matrix)
+  f1score = validation.get_f1score(conf_matrix)
+
+  return acc, precision, recall, f1score
 
 
 def extract_positions_by_year(positions, trigrams_by_year):
