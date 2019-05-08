@@ -9,6 +9,7 @@ class LSTMModel(nn.Module):
   
     self.hidden_size = hidden_size
     self.num_of_layers = num_of_layers
+    self.output_dim = output_dim
     
     self.layer1 = nn.LSTM(input_dim, hidden_size, num_of_layers)
     self.layer2 = nn.Linear(hidden_size, output_dim)
@@ -36,6 +37,7 @@ class AttentionModel(nn.Module):
     self.hidden_size = hidden_size
     self.seq_length = seq_length
     self.num_of_layers = num_of_layers
+    self.output_dim = output_dim
     
     self.encoder = nn.LSTM(input_dim, hidden_size, num_of_layers)
     self.attn = nn.Linear(hidden_size, seq_length)

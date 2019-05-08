@@ -73,11 +73,11 @@ def get_confusion_matrix(y_true, y_pred):
     return conf_matrix
 
 
-def verify_model(model, X, Y, criterion):
+def verify_model(model, X, Y):
     X.requires_grad_()
     criterion = torch.nn.CrossEntropyLoss()
     scores = model(X, model.init_hidden(Y.shape[0]))
-    print('Loss @ init: %.3f' % criterion(scores, Y).item())
+    print('Loss @ init: %.3f, expected: %.3f' % (criterion(scores, Y).item(), -math.log(1 / model.output_dim)))
 
     non_zero_idx = 1
     perfect_scores = [[0, 0] for y in Y]
@@ -108,7 +108,7 @@ def train_rnn(model, verify, epochs, learning_rate, batch_size, X, Y, X_test, Y_
     num_of_batches = math.floor(num_of_examples/batch_size)
 
     if verify:
-        verify_model(model, X, Y, criterion)
+        verify_model(model, X, Y)
 
     all_losses = []
     all_val_losses = []
