@@ -1,5 +1,5 @@
 
-from torch import nn, zeros, bmm
+from torch import nn, zeros, bmm, squeeze, unsqueeze
 import torch.nn.functional as F
 
 class LSTMModel(nn.Module):
@@ -45,15 +45,15 @@ class AttentionModel(nn.Module):
   def forward(self, input_seq, hidden_state):
     encoder_outputs, (h, _) = self.encoder(input_seq, hidden_state)
     attn_applied, attn_weights = self.attention(encoder_outputs, h)
-    score_seq = self.out(attn_applied.view(-1, self.hidden_size))
+    score_seq = self.out(attn_applied.reshape(-1, self.hidden_size))
 
     return score_seq
 
 
   def attention(self, encoder_outputs, hidden):
-    attn_weights = F.softmax(self.attn(hidden[-1]), dim=1)
-    attn_weights = attn_weights.view(-1, 1, self.seq_length)
-    encoder_outputs = encoder_outputs.view(-1, self.seq_length, self.hidden_size)
+    attn_weights = F.softmax(squeeze(self.attn(hidden)), dim=1)
+    attn_weights = unsqueeze(attn_weights, 1)
+    encoder_outputs = encoder_outputs.permute(1, 0, 2)
     attn_applied = bmm(attn_weights, encoder_outputs)
 
     return attn_applied, attn_weights
