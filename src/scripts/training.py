@@ -14,11 +14,10 @@ np.random.seed(1)
 train_trigram_vecs, train_labels = utils.read_dataset('./data/processed/triplet_train_data.csv')
 test_trigram_vecs, test_labels = utils.read_dataset('./data/processed/triplet_test_data.csv')
 
-X_train = torch.FloatTensor(train_trigram_vecs[:, :8192])
-Y_train = torch.LongTensor(train_labels[:8192])
-X_test = torch.FloatTensor(test_trigram_vecs)
-Y_test = torch.LongTensor(test_labels)
-
+X_train = torch.tensor(train_trigram_vecs[:, :8192], dtype=torch.float32)
+Y_train = torch.tensor(train_labels[:8192], dtype=torch.int64)
+X_test = torch.tensor(test_trigram_vecs, dtype=torch.float32)
+Y_test = torch.tensor(test_labels, dtype=torch.int64)
 #%% Training model
 _, counts = np.unique(Y_train, return_counts=True)
 imbalance = max(counts) / Y_train.shape[0]
@@ -32,10 +31,10 @@ seq_length = X_train.shape[0]
 output_dim = 2
 hidden_size = 5
 num_of_layers = 1
-net = models.LSTMModel(input_dim, hidden_size, num_of_layers, output_dim)
-#net = models.AttentionModel(input_dim, seq_length, hidden_size, num_of_layers, output_dim)
+#net = models.LSTMModel(input_dim, hidden_size, num_of_layers, output_dim)
+net = models.AttentionModel(input_dim, seq_length, hidden_size, num_of_layers, output_dim)
 
 num_of_epochs = 100
-learning_rate = 0.01
+learning_rate = 0.005
 batch_size = 256
-train_model.train_rnn(net, num_of_epochs, learning_rate, batch_size, X_train, Y_train, X_test, Y_test)
+train_model.train_rnn(net, True, num_of_epochs, learning_rate, batch_size, X_train, Y_train, X_test, Y_test)
