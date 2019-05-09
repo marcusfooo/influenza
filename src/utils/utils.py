@@ -50,7 +50,7 @@ def process_years(strains_by_year, squeeze, extract_epitopes, trigram_to_idx, tr
   return trigram_vecs, trigram_idxs
 
 
-def read_dataset(path):
+def read_dataset(path, concat=True):
   _, trigram_vecs_data = make_dataset.read_trigram_vecs('./data/raw/')
 
   df = pd.read_csv(path)
@@ -58,6 +58,11 @@ def read_dataset(path):
   trigram_idx_strings = df.loc[:, df.columns != 'y'].values
   parsed_trigram_idxs = [list(map(lambda x: ast.literal_eval(x), example)) for example in trigram_idx_strings]
   trigram_vecs = np.array(build_features.map_idxs_to_vecs(parsed_trigram_idxs, trigram_vecs_data))
-  trigram_vecs_concatenated = np.reshape(trigram_vecs, [len(df.columns) - 1, len(df.index), -1])
+  if concat:
+    trigram_vecs = np.reshape(trigram_vecs, [len(df.columns) - 1, len(df.index), -1])
+  else:
+    # Sum trigram vecs instead of concatenating them
+    trigram_vecs = np.sum(trigram_vecs, axis=2)
+    trigram_vecs = np.moveaxis(trigram_vecs, 1, 0)
 
-  return trigram_vecs_concatenated, labels
+  return trigram_vecs, labels
