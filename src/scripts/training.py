@@ -10,8 +10,9 @@ torch.manual_seed(1)
 np.random.seed(1)
 
 data_set = './data/processed/triplet'
-train_trigram_vecs, train_labels = utils.read_dataset(data_set + '_train.csv', concat=False)
-test_trigram_vecs, test_labels = utils.read_dataset(data_set + '_test.csv', concat=False)
+clustering_method = 'hierarchy' # options: 'dbscan' 'hierarchy' 'random'
+train_trigram_vecs, train_labels = utils.read_dataset(data_set + f'_train.{clustering_method}.csv', concat=False)
+test_trigram_vecs, test_labels = utils.read_dataset(data_set + f'_test.{clustering_method}.csv', concat=False)
 
 #train_trigram_vecs = build_features.get_diff_vecs(train_trigram_vecs)
 #test_trigram_vecs = build_features.get_diff_vecs(test_trigram_vecs)

@@ -7,9 +7,11 @@ from sklearn.neighbors import NearestNeighbors
 from sklearn import preprocessing
 import math
 import random
-
 import numpy as np
 from math import floor
+from src.visualization import visualize
+
+from scipy.cluster.hierarchy import linkage, fcluster
 
 def cluster_years(prot_vecs, method='DBSCAN'):
     clusters = []
@@ -89,9 +91,12 @@ def link_clusters(clusters):
     return clusters
 
 def label_encode(strains_by_year):
-    amino_acids = ['A', 'F', 'Q', 'R', 'T', 'Y', 'V', 'I', 'H', 'K', 'P', 'N', 'E', 'G', 'S', 'M', 'D', 'W', 'C', 'L']
+    amino_acids = ['A', 'F', 'Q', 'R', 'T', 'Y', 'V', 'I', 'H', 'K', 'P', 'N', 'E', 'G', 'S', 'M', 'D', 'W', 'C', 'L', '-']
     le = preprocessing.LabelEncoder()
     le.fit(amino_acids)
+
+    # unique, count = np.unique(list(strains_by_year[0][0]), return_counts=True)
+    # print(dict(zip(unique, count)))
 
     encoded_strains = []
     for year_strains in strains_by_year:
@@ -104,14 +109,20 @@ def label_encode(strains_by_year):
 
     return encoded_strains
 
-def cluster_raw(strains_by_year, method='DBSCAN'):
+def cluster_raw(strains_by_year, method='dbscan'):
     clusters = []
-    for year_strains in strains_by_year:
-        if(method == 'DBSCAN'):
-            min_samples = floor(len(year_strains)*0.02)
-            clf = DBSCAN(eps=0.01, min_samples=min_samples, metric='hamming').fit(year_strains)
+    for year_idx, year_strains in enumerate(strains_by_year):
+        if(method == 'dbscan'):
+            clf = DBSCAN(eps=0.005, min_samples=10, metric='hamming').fit(year_strains)
             # clf = DBSCAN(eps=10, min_samples=5, metric=metric).fit(year_strains)
             labels = clf.labels_
+
+        if(method == 'hierarchy'):
+            Z = linkage(year_strains, method='complete', metric='hamming')
+            max_d = 0.135
+            visualize.show_dendogram(Z, year_idx, max_d)
+            labels = fcluster(Z, 5, depth=10)
+            # labels = fcluster(Z, max_d, criterion='distance')
 
         unique, count = np.unique(labels, return_counts=True)
 
@@ -131,27 +142,35 @@ def sample_from_clusters(strains_by_year, clusters_by_years, sample_size):
     first_year_population = clusters_by_years[0]['population']
     first_year_total = len(strains_by_year[0])
 
-    for label_idx in range(len(first_year_population)):
+    for label_idx in first_year_population.keys(): # len(population) = no_clusters
         cluster_proportion = first_year_population[label_idx]/first_year_total
         cluster_sample_size = math.floor(sample_size*cluster_proportion)
         cluster_strains = [strains_by_year[0][i] for i, label in enumerate(first_year_labels) if label == label_idx]
         sampled_strains[0] = sampled_strains[0] + random.choices(cluster_strains, k=cluster_sample_size)
 
+        # on last iteration sample missing
+        missing_samples = 500 - len(sampled_strains[0])
+        if label_idx == list(first_year_population)[-1] and missing_samples > 0:
+            sampled_strains[0] = sampled_strains[0] + random.choices(cluster_strains, k=missing_samples)
+
+
     # sample forward
     current_cluster = label_encode([sampled_strains[0]])[0]
-    for year_idx, year_clusters in enumerate(clusters_by_years[1:]):
+    for year_idx in range(1, len(clusters_by_years)):
+        year_clusters = clusters_by_years[year_idx]
         neigh = NearestNeighbors(n_neighbors=1, metric='hamming')
         neigh.fit(year_clusters['data'])
         neighbour_strain_idx = neigh.kneighbors(current_cluster, return_distance=False)
 
         links = [year_clusters['labels'][idx[0]] for idx in neighbour_strain_idx]
 
-        clustered_strains = []
-        for label_idx in range(len(year_clusters['population'])):
-           clustered_strains.append([strains_by_year[year_idx+1][i] for i, label in enumerate(year_clusters['labels']) if label == label_idx])
+        clustered_strains = {}
+        for label_idx in year_clusters['population'].keys():
+            clustered_strains[label_idx] = [strains_by_year[year_idx][i] for i, label in enumerate(year_clusters['labels']) if label == label_idx]
 
         for link in links:
-           sampled_strains[year_idx+1].append(random.choice(clustered_strains[link]))
+            sample = random.choice(clustered_strains[link])
+            sampled_strains[year_idx] = sampled_strains[year_idx] + [sample]
 
     return sampled_strains
             

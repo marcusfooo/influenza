@@ -5,13 +5,16 @@ from src.data import make_dataset
 from src.features import build_features
 from src.utils import utils
 from src.data import cluster
+from src.visualization import visualize
 
 def main():
   data_path = './data/raw/'
-  data_files = ['2008.csv', '2009.csv', '2010.csv','2011.csv', '2012.csv', '2013.csv', '2014.csv', '2015.csv', '2016.csv', '2017.csv']
+  data_files = ['2011.csv', '2012.csv', '2013.csv', '2014.csv', '2015.csv', '2016.csv', '2017.csv']
+  # data_files = ['2015.csv', '2016.csv', '2017.csv']
   training_samples = 400
   test_samples = 100
   test_split = test_samples / (training_samples + test_samples)
+  clustering_method = 'hierarchy' # options: 'dbscan' 'hierarchy' 'random'
 
   trigram_to_idx, _ = make_dataset.read_trigram_vecs(data_path)
   epitope_a = [122, 124, 126, 130, 131, 132, 133, 135, 137, 138, 140, 142, 143, 144, 145, 146, 150, 152, 168]
@@ -26,14 +29,23 @@ def main():
   strains_by_year = list(map(make_dataset.replace_uncertain_AAs,strains_by_year))
   train_strains_by_year, test_strains_by_year = make_dataset.train_test_split_strains(strains_by_year, test_split)
 
-  train_strains_by_year, train_clusters_by_year  = utils.cluster_years(train_strains_by_year, data_path)
-  train_strains_by_year = cluster.sample_from_clusters(train_strains_by_year, train_clusters_by_year, training_samples)
+  if (clustering_method != 'random'):
+    train_strains_by_year, train_clusters_by_year  = utils.cluster_years(train_strains_by_year, data_path, clustering_method)
+    test_strains_by_year, test_clusters_by_year = utils.cluster_years(test_strains_by_year, data_path, clustering_method)
+    print('Train clusters over the years: ')
+    for i, year_clusters in enumerate(train_clusters_by_year):
+        print('Year: {}\n{}'.format(i, year_clusters['population']))
+    visualize.show_clusters(train_clusters_by_year, data_files, method='PCA', dims=3)
 
-  test_strains_by_year, test_clusters_by_year = utils.cluster_years(test_strains_by_year, data_path)
-  test_strains_by_year = cluster.sample_from_clusters(test_strains_by_year, test_clusters_by_year, test_samples)
+    train_strains_by_year = cluster.sample_from_clusters(train_strains_by_year, train_clusters_by_year, training_samples)
+    test_strains_by_year = cluster.sample_from_clusters(test_strains_by_year, test_clusters_by_year, test_samples)
 
-  create_triplet_trigram_dataset(train_strains_by_year, trigram_to_idx, epitope_positions, file_name=('./data/processed/triplet_train'))
-  create_triplet_trigram_dataset(test_strains_by_year, trigram_to_idx, epitope_positions, file_name=('./data/processed/triplet_test'))
+  else:
+    train_strains_by_year = build_features.sample_strains(train_strains_by_year, training_samples)
+    test_strains_by_year = build_features.sample_strains(test_strains_by_year, test_samples)
+
+  create_triplet_trigram_dataset(train_strains_by_year, trigram_to_idx, epitope_positions, file_name=(f'./data/processed/triplet_train.{clustering_method}'))
+  create_triplet_trigram_dataset(test_strains_by_year, trigram_to_idx, epitope_positions, file_name=(f'./data/processed/triplet_test.{clustering_method}'))
 
 def create_triplet_trigram_dataset(strains_by_year, trigram_to_idx, epitope_positions, file_name):
   """Creates a dataset in csv format.
