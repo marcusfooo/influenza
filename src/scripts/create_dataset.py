@@ -8,9 +8,9 @@ from src.data import cluster
 
 def main():
   data_path = './data/raw/'
-  data_files = ['2011.csv', '2012.csv', '2013.csv', '2014.csv', '2015.csv', '2016.csv']
-  training_samples = 500
-  test_samples = 125
+  data_files = ['2008.csv', '2009.csv', '2010.csv','2011.csv', '2012.csv', '2013.csv', '2014.csv', '2015.csv', '2016.csv', '2017.csv']
+  training_samples = 400
+  test_samples = 100
   test_split = test_samples / (training_samples + test_samples)
 
   trigram_to_idx, _ = make_dataset.read_trigram_vecs(data_path)
@@ -49,15 +49,16 @@ def create_triplet_trigram_dataset(strains_by_year, trigram_to_idx, epitope_posi
   trigram_idxs = build_features.map_trigrams_to_idxs(trigrams_by_year, trigram_to_idx)
   labels = build_features.make_triplet_labels(triplet_strains_by_year)
 
-  acc, p, r, f1 = build_features.get_majority_baselines(triplet_strains_by_year, labels)
+  acc, p, r, f1, mcc = build_features.get_majority_baselines(triplet_strains_by_year, labels)
   with open(file_name + '_baseline.txt', 'w') as f:
     f.write(' Accuracy:\t%.3f\n' % acc)
     f.write(' Precision:\t%.3f\n' % p)
     f.write(' Recall:\t%.3f\n' % r)
-    f.write(' F1-score:\t%.3f' % f1)
+    f.write(' F1-score:\t%.3f\n' % f1)
+    f.write(' Matthews CC:\t%.3f' % mcc)
 
   data_dict = {'y': labels}
-  for year in range(len(triplet_strains_by_year)):
+  for year in range(len(triplet_strains_by_year) - 1):
     data_dict[year] = trigram_idxs[year]
 
   pd.DataFrame(data_dict).to_csv(file_name + '.csv', index=False)

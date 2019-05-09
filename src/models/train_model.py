@@ -78,11 +78,11 @@ def verify_model(model, X, Y):
     X.detach()
 
 
-def train_rnn(model, verify, epochs, learning_rate, batch_size, X, Y, X_test, Y_test):
+def train_rnn(model, verify, epochs, learning_rate, batch_size, X, Y, X_test, Y_test, class_weights=[0.5, 0.5]):
     print_interval = 10
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
-    criterion = torch.nn.CrossEntropyLoss(weight=torch.FloatTensor([0.1, 0.9]))
+    criterion = torch.nn.CrossEntropyLoss(weight=torch.FloatTensor(class_weights))
     num_of_examples = X.shape[1]
     num_of_batches = math.floor(num_of_examples/batch_size)
 
@@ -141,6 +141,7 @@ def train_rnn(model, verify, epochs, learning_rate, batch_size, X, Y, X_test, Y_
             precision = validation.get_precision(conf_matrix)
             recall = validation.get_recall(conf_matrix)
             fscore = validation.get_f1score(conf_matrix)
+            mcc = validation.get_mcc(conf_matrix)
             val_acc = validation.get_accuracy(conf_matrix)
 
             val_loss = criterion(scores, Y_test).item()
@@ -151,7 +152,7 @@ def train_rnn(model, verify, epochs, learning_rate, batch_size, X, Y, X_test, Y_
 
 
         if epoch % print_interval == 0:
-            print(' Epoch %d\tTime %.0f s\tLoss %.3f\tAcc  %.3f\tV loss %.3f\tV acc  %.3f\tPrecis %.3f\tRecall  %.3f\tFscore  %.3f'
-                % (epoch, elapsed_time, epoch_loss, epoch_acc, val_loss, val_acc, precision, recall, fscore))
+            print(' Epoch %d\tTime %.0f s\tT_loss %.3f\tT_acc  %.3f\tV_loss %.3f\tV_acc  %.3f\tPrecis %.3f\tRecall %.3f\tFscore %.3f\tMCC    %.3f'
+                % (epoch, elapsed_time, epoch_loss, epoch_acc, val_loss, val_acc, precision, recall, fscore, mcc))
 
     plot_training_history(all_losses, all_val_losses, all_accs, all_val_accs, mini_batch_scores, Y_test_mini_batch)
