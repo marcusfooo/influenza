@@ -2,8 +2,13 @@ import pandas as pd
 import random
 import math
 
-def read_trigram_vecs(data_path='../data/raw/'):
-  """TODO: DOCSTRING"""
+def read_trigram_vecs(data_path='./data/raw/'):
+  """
+  Reads the csv file containing 100 dimensional prot vecs, the 
+  data_path argument indicating where it is located.
+  Returns a dictionary that maps a 3gram of amino acids to its
+  index and a numpy array containing the trigram vecs.
+  """
   prot_vec_file = 'protVec_100d_3grams.csv'
     
   df = pd.read_csv(data_path + prot_vec_file, delimiter = '\t')
@@ -13,13 +18,15 @@ def read_trigram_vecs(data_path='../data/raw/'):
   
   return trigram_to_idx, trigram_vecs
 
-def read_strains_from(data_files, data_path='../data/raw/'):
-  """TODO: DOCSTRING"""
+def read_strains_from(data_files, data_path='./data/raw/'):
+  """
+  Reads the raw strains from the data_files located by the data_path.
+  Returns a pandas series for each data file, contained in a ordered list.
+  """
   raw_strains = []
   for file_name in data_files:
     df = pd.read_csv(data_path + file_name)
     strains = df['seq']
-    #sequences = replace_uncertain_AAs(strains) Do this in build_features instead
     raw_strains.append(strains)
     
   return raw_strains
