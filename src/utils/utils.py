@@ -72,3 +72,24 @@ def read_dataset(path, concat=True):
     trigram_vecs = np.moveaxis(trigram_vecs, 1, 0)
 
   return trigram_vecs, labels
+
+
+def get_time_string(time):
+  """TODO: DOCSTRING"""
+  mins = time // 60
+  secs = time % 60
+  time_string = ''
+
+  if mins < 10:
+    time_string += '  '
+  elif mins < 100:
+    time_string += ' '
+  
+  time_string += '%d m ' % mins
+
+  if secs < 10:
+    time_string += ' '
+
+  time_string += '%d s' % secs
+
+  return time_string
