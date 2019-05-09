@@ -87,9 +87,9 @@ def make_triplet_labels(triplet_strains_by_year):
 
 def get_majority_baselines(triplet_strains_by_year, labels):
   """
-  Returns accuracy, precision, recall and f1-score for the baseline
-  approach of simply predicting mutation epitope in the last year
-  differs from the majority one.
+  Returns accuracy, precision, recall, f1-score and mcc for the baseline
+  approach of simply predicting mutation epitope in the last year differs
+  from the majority one.
   """
   epitope_position = 2
 
@@ -111,8 +111,9 @@ def get_majority_baselines(triplet_strains_by_year, labels):
   precision = validation.get_precision(conf_matrix)
   recall = validation.get_recall(conf_matrix)
   f1score = validation.get_f1score(conf_matrix)
+  mcc = validation.get_mcc(conf_matrix)
 
-  return acc, precision, recall, f1score
+  return acc, precision, recall, f1score, mcc
 
 
 def extract_positions_by_year(positions, trigrams_by_year):
