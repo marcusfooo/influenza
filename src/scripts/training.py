@@ -14,16 +14,19 @@ clustering_method = 'random' # options: 'dbscan' 'hierarchy' 'random'
 train_trigram_vecs, train_labels = utils.read_dataset(data_set + f'_{clustering_method}_train.csv', concat=False)
 test_trigram_vecs, test_labels = utils.read_dataset(data_set + f'_{clustering_method}_test.csv', concat=False)
 
+# svm baseline
+window_size = 1
+train_model.svm_baseline(
+    build_features.reshape_to_linear(train_trigram_vecs, window_size=window_size), train_labels, 
+    build_features.reshape_to_linear(test_trigram_vecs, window_size=window_size), test_labels,
+    clustering_method)
+
 #train_trigram_vecs = build_features.get_diff_vecs(train_trigram_vecs)
 #test_trigram_vecs = build_features.get_diff_vecs(test_trigram_vecs)
 
 X_train = torch.tensor(train_trigram_vecs, dtype=torch.float32)
 Y_train = torch.tensor(train_labels, dtype=torch.int64)
 
-# svm baseline
-"""train_model.svm_baseline(
-    build_features.reshape_to_linear(train_trigram_vecs), train_labels, 
-    build_features.reshape_to_linear(test_trigram_vecs), test_labels)"""
 
 X_test = torch.tensor(test_trigram_vecs, dtype=torch.float32)
 Y_test = torch.tensor(test_labels, dtype=torch.int64)
@@ -39,8 +42,6 @@ with open(data_set + f'_{clustering_method}_test_baseline.txt', 'r') as f:
     print('Test baselines:')
     print(f.read())
 
-
-exit
 input_dim = X_train.shape[2]
 seq_length = X_train.shape[0]
 output_dim = 2

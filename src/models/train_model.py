@@ -190,10 +190,18 @@ def train_rnn(model, verify, epochs, learning_rate, batch_size, X, Y, X_test, Y_
             plot_attention(attn_weights)
     plt.show()
 
-def svm_baseline(X, Y, X_test, Y_test):
-    clf = SVC(gamma='auto').fit(X, Y) 
+def svm_baseline(X, Y, X_test, Y_test, method):
+    clf = SVC(gamma='auto', class_weight='balanced').fit(X, Y) 
     Y_pred = clf.predict(X_test)
     precision, recall, fscore, mcc, val_acc = validation.evaluate(Y_test, Y_pred)
     print('SVM baseline:')
     print('V_acc  %.3f\tPrecis %.3f\tRecall %.3f\tFscore %.3f\tMCC %.3f'
                 % (val_acc, precision, recall, fscore, mcc))
+    import datetime as dt
+    with open(f'./reports/results/{method}_SVM.txt', 'a') as f:
+        f.write(f'{dt.datetime.now()}\n')
+        f.write(' Accuracy:\t%.3f\n' % val_acc)
+        f.write(' Precision:\t%.3f\n' % precision)
+        f.write(' Recall:\t%.3f\n' % recall)
+        f.write(' F1-score:\t%.3f\n' % fscore)
+        f.write(' Matthews CC:\t%.3f\n\n' % mcc)
