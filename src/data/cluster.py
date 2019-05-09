@@ -5,6 +5,8 @@ from sklearn.metrics import silhouette_score
 from sklearn.neighbors.nearest_centroid import NearestCentroid
 from sklearn.neighbors import NearestNeighbors
 from sklearn import preprocessing
+import math
+import random
 
 import numpy as np
 from math import floor
@@ -30,7 +32,7 @@ def cluster_years(prot_vecs, method='DBSCAN'):
             labels = clf.labels_
             centroids = clf.cluster_centers_
 
-        clusters.append({'prot_vecs':year_prot_vecs, 'labels':labels, 'centroids':centroids})
+        clusters.append({'data':year_prot_vecs, 'labels':labels, 'centroids':centroids})
 
     return clusters
 
@@ -41,20 +43,22 @@ def squeeze_to_prot_vecs(trigram_vecs):
         prot_vecs.append(year_trigram_vecs)
     return prot_vecs
 
-def remove_outliers(clusters):
+def remove_outliers(data, clusters):
     for year_idx, cluster in enumerate(clusters):
         idxs_to_remove = []
         for i, label in enumerate(cluster['labels']):
-            if(label == -1): idxs_to_remove.append(i)
-        clusters[year_idx]['prot_vecs'] = [prot_vec for i, prot_vec in enumerate(cluster['prot_vecs']) if i not in idxs_to_remove]
+            if(label == -1): idxs_to_remove.append(i) # -1 means outlier
+        data[year_idx] = [prot_vec for i, prot_vec in enumerate(data[year_idx]) if i not in idxs_to_remove]
         clusters[year_idx]['labels'] = [label for i, label in enumerate(cluster['labels']) if i not in idxs_to_remove]
+        clusters[year_idx]['data'] = [strain for i, strain in enumerate(cluster['data']) if i not in idxs_to_remove]
+        if -1 in clusters[year_idx]['population']: del clusters[year_idx]['population'][-1]
 
-    return clusters
+    return data, clusters
         
 def evaluate_clusters(clusters):
     scores = []
     for cluster in clusters:
-        score = silhouette_score(cluster['prot_vecs'], cluster['labels'])
+        score = silhouette_score(cluster['data'], cluster['labels'])
         scores.append(score)
 
     average = sum(scores) / float(len(scores))
@@ -77,6 +81,7 @@ def link_clusters(clusters):
         idxs_by_centroid = neigh.kneighbors(current_centroids, return_distance=False)
 
         for label in clusters[year_idx]['labels']:
+            if (idxs_by_centroid[label][0] == -1): del idxs_by_centroid[label][0]
             links.append(idxs_by_centroid[label]) # centroid idx corresponds to label
 
         clusters[year_idx]['links'] = links
@@ -84,8 +89,9 @@ def link_clusters(clusters):
     return clusters
 
 def label_encode(strains_by_year):
+    amino_acids = ['A', 'F', 'Q', 'R', 'T', 'Y', 'V', 'I', 'H', 'K', 'P', 'N', 'E', 'G', 'S', 'M', 'D', 'W', 'C', 'L']
     le = preprocessing.LabelEncoder()
-    le.fit(list(strains_by_year[0][0]))
+    le.fit(amino_acids)
 
     encoded_strains = []
     for year_strains in strains_by_year:
@@ -98,17 +104,56 @@ def label_encode(strains_by_year):
 
     return encoded_strains
 
-def cluster_raw(strains_by_year, processed_data, method='DBSCAN', metric='hamming'):
+def cluster_raw(strains_by_year, method='DBSCAN'):
     clusters = []
-    for i, year_strains in enumerate(strains_by_year):
+    for year_strains in strains_by_year:
         if(method == 'DBSCAN'):
-            min_samples = floor(len(year_strains)*0.01)
-            clf = DBSCAN(eps=0.03, min_samples=min_samples, metric=metric).fit(year_strains)
+            min_samples = floor(len(year_strains)*0.02)
+            clf = DBSCAN(eps=0.01, min_samples=min_samples, metric='hamming').fit(year_strains)
+            # clf = DBSCAN(eps=10, min_samples=5, metric=metric).fit(year_strains)
             labels = clf.labels_
-            # centroids = NearestCentroid().fit(year_strains, labels).centroids_
 
-        # clusters.append({'prot_vecs':processed_data[i], 'labels':labels, 'centroids':centroids})
-        clusters.append({'prot_vecs':processed_data[i], 'labels':labels})
+        unique, count = np.unique(labels, return_counts=True)
 
+        cluster = {
+            'data': year_strains,
+            'labels':labels, 
+            'population': dict(zip(unique, count))} 
 
+        clusters.append(cluster)
     return clusters
+
+def sample_from_clusters(strains_by_year, clusters_by_years, sample_size):
+    sampled_strains = [[]] * len(strains_by_year)
+
+    # start sample from first cluster
+    first_year_labels = clusters_by_years[0]['labels']
+    first_year_population = clusters_by_years[0]['population']
+    first_year_total = len(strains_by_year[0])
+
+    for label_idx in range(len(first_year_population)):
+        cluster_proportion = first_year_population[label_idx]/first_year_total
+        cluster_sample_size = math.floor(sample_size*cluster_proportion)
+        cluster_strains = [strains_by_year[0][i] for i, label in enumerate(first_year_labels) if label == label_idx]
+        sampled_strains[0] = sampled_strains[0] + random.choices(cluster_strains, k=cluster_sample_size)
+
+    # sample forward
+    current_cluster = label_encode([sampled_strains[0]])[0]
+    for year_idx, year_clusters in enumerate(clusters_by_years[1:]):
+        neigh = NearestNeighbors(n_neighbors=1, metric='hamming')
+        neigh.fit(year_clusters['data'])
+        neighbour_strain_idx = neigh.kneighbors(current_cluster, return_distance=False)
+
+        links = [year_clusters['labels'][idx[0]] for idx in neighbour_strain_idx]
+
+        clustered_strains = []
+        for label_idx in range(len(year_clusters['population'])):
+           clustered_strains.append([strains_by_year[year_idx+1][i] for i, label in enumerate(year_clusters['labels']) if label == label_idx])
+
+        for link in links:
+           sampled_strains[year_idx+1].append(random.choice(clustered_strains[link]))
+
+    return sampled_strains
+            
+
+          
