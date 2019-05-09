@@ -149,7 +149,7 @@ def sample_from_clusters(strains_by_year, clusters_by_years, sample_size):
         sampled_strains[0] = sampled_strains[0] + random.choices(cluster_strains, k=cluster_sample_size)
 
         # on last iteration sample missing
-        missing_samples = 500 - len(sampled_strains[0])
+        missing_samples = sample_size - len(sampled_strains[0])
         if label_idx == list(first_year_population)[-1] and missing_samples > 0:
             sampled_strains[0] = sampled_strains[0] + random.choices(cluster_strains, k=missing_samples)
 
