@@ -64,7 +64,7 @@ class AttentionModel(nn.Module):
     encoder_outputs = encoder_outputs.permute(1, 0, 2)
     attn_applied = bmm(attn_weights, encoder_outputs)
 
-    return attn_applied, attn_weights
+    return attn_applied, squeeze(attn_weights)
 
   def init_hidden(self, batch_size):
     h_init = zeros(1, batch_size, self.hidden_size)
