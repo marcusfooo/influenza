@@ -11,11 +11,14 @@ np.random.seed(1)
 
 data_set = './data/processed/triplet'
 clustering_method = 'hierarchy' # options: 'dbscan' 'hierarchy' 'random'
-train_trigram_vecs, train_labels = utils.read_dataset(data_set + f'_train.{clustering_method}.csv', concat=False)
-test_trigram_vecs, test_labels = utils.read_dataset(data_set + f'_test.{clustering_method}.csv', concat=False)
+train_trigram_vecs, train_labels = utils.read_dataset(data_set + f'_train.{clustering_method}.csv', limit=0, concat=False)
+test_trigram_vecs, test_labels = utils.read_dataset(data_set + f'_test.{clustering_method}.csv', limit=0, concat=False)
 
 #train_trigram_vecs = build_features.get_diff_vecs(train_trigram_vecs)
 #test_trigram_vecs = build_features.get_diff_vecs(test_trigram_vecs)
+
+# svm baseline prediction
+train_model.svm_baseline(build_features.reshape_to_linear(train_trigram_vecs), train_labels, build_features.reshape_to_linear(test_trigram_vecs), test_labels)
 
 samples = 8192
 X_train = torch.tensor(train_trigram_vecs[:, :samples], dtype=torch.float32)
@@ -29,10 +32,12 @@ print('Training class imbalance: %.3f' % imbalance)
 _, counts = np.unique(Y_test, return_counts=True)
 imbalance = max(counts) / Y_test.shape[0]
 print('Testing class imbalance:  %.3f' % imbalance)
-with open(data_set + '_test_baseline.txt', 'r') as f:
+with open(data_set + f'_test.{clustering_method}_baseline.txt', 'r') as f:
     print('Test baselines:')
     print(f.read())
 
+
+exit
 input_dim = X_train.shape[2]
 seq_length = X_train.shape[0]
 output_dim = 2

@@ -56,10 +56,11 @@ def cluster_years(strains_by_year, data_path, method='DBSCAN'):
   strains_by_year, clusters_by_year = cluster.remove_outliers(strains_by_year, clusters_by_year)
   return strains_by_year, clusters_by_year
 
-def read_dataset(path, concat=True):
+def read_dataset(path, limit=0, concat=True):
   _, trigram_vecs_data = make_dataset.read_trigram_vecs('./data/raw/')
 
   df = pd.read_csv(path)
+  if(limit!=0): df = df.head(limit)
   labels = df['y'].values
   trigram_idx_strings = df.loc[:, df.columns != 'y'].values
   parsed_trigram_idxs = [list(map(lambda x: ast.literal_eval(x), example)) for example in trigram_idx_strings]

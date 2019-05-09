@@ -4,6 +4,7 @@ import math
 import time
 import matplotlib.pyplot as plt
 from src.utils import validation
+from sklearn.svm import SVC
 
 def repackage_hidden(h):
         """Wraps hidden states in new Tensors, to detach them from their history."""
@@ -137,12 +138,7 @@ def train_rnn(model, verify, epochs, learning_rate, batch_size, X, Y, X_test, Y_
             predictions = predictions_from_output(scores)
             predictions = predictions.view_as(Y_test)
             
-            conf_matrix = validation.get_confusion_matrix(Y_test, predictions)
-            precision = validation.get_precision(conf_matrix)
-            recall = validation.get_recall(conf_matrix)
-            fscore = validation.get_f1score(conf_matrix)
-            mcc = validation.get_mcc(conf_matrix)
-            val_acc = validation.get_accuracy(conf_matrix)
+            precision, recall, fscore, mcc, val_acc = validation.evaluate(Y_test, predictions)
 
             val_loss = criterion(scores, Y_test).item()
             all_val_losses.append(val_loss)
@@ -156,3 +152,11 @@ def train_rnn(model, verify, epochs, learning_rate, batch_size, X, Y, X_test, Y_
                 % (epoch, elapsed_time, epoch_loss, epoch_acc, val_loss, val_acc, precision, recall, fscore, mcc))
 
     plot_training_history(all_losses, all_val_losses, all_accs, all_val_accs, mini_batch_scores, Y_test_mini_batch)
+
+def svm_baseline(X, Y, X_test, Y_test):
+    clf = SVC(gamma='auto').fit(X, Y) 
+    Y_pred = clf.predict(X_test)
+    precision, recall, fscore, mcc, val_acc = validation.evaluate(Y_test, Y_pred)
+    print('SVM baseline:')
+    print('V_acc  %.3f\tPrecis %.3f\tRecall %.3f\tFscore %.3f\tMCC %.3f'
+                % (val_acc, precision, recall, fscore, mcc))
