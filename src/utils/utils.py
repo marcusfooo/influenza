@@ -85,11 +85,11 @@ def get_time_string(time):
   elif mins < 100:
     time_string += ' '
   
-  time_string += '%d m ' % mins
+  time_string += '%dm ' % mins
 
   if secs < 10:
     time_string += ' '
 
-  time_string += '%d s' % secs
+  time_string += '%ds' % secs
 
   return time_string
