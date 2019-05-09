@@ -7,6 +7,7 @@ from src.features import build_features
 from src.data import cluster
 import random
 
+
 def read_and_process_to_trigram_vecs(data_files, data_path='../data/raw/', sample_size=100, test_split=0.0, squeeze=True, extract_epitopes=False):
   strains_by_year = make_dataset.read_strains_from(data_files, data_path)
 
@@ -24,6 +25,7 @@ def read_and_process_to_trigram_vecs(data_files, data_path='../data/raw/', sampl
   test_trigram_vecs, test_trigram_idxs = process_years(test_strains_by_year, data_path, squeeze, extract_epitopes)
 
   return train_trigram_vecs, test_trigram_vecs, train_trigram_idxs, test_trigram_idxs
+
 
 def process_years(strains_by_year, data_path, squeeze=True, extract_epitopes=False):
   if(len(strains_by_year[0]) == 0): return [],[]
@@ -50,21 +52,34 @@ def process_years(strains_by_year, data_path, squeeze=True, extract_epitopes=Fal
 
   return trigram_vecs, trigram_idxs
 
+
 def cluster_years(strains_by_year, data_path, method='DBSCAN'):
   encoded_strains = cluster.label_encode(strains_by_year)
   clusters_by_year = cluster.cluster_raw(encoded_strains, method)
   strains_by_year, clusters_by_year = cluster.remove_outliers(strains_by_year, clusters_by_year)
   return strains_by_year, clusters_by_year
 
-def read_dataset(path, limit=0, concat=True):
+
+def read_dataset(path, limit=0, concat=False):
+  """
+  Reads the data set from given path, expecting it to contain a 'y' column with
+  the label and each year in its own column containing a number of trigram indexes.
+  Limit sets the maximum number of examples to read, zero meaning no limit.
+  If concat is true each of the trigrams in a year is concatenated, if false
+  they are instead summed elementwise.
+  """
   _, trigram_vecs_data = make_dataset.read_trigram_vecs('./data/raw/')
 
   df = pd.read_csv(path)
-  if(limit!=0): df = df.head(limit)
+
+  if limit != 0:
+    df = df.head(limit)
+
   labels = df['y'].values
   trigram_idx_strings = df.loc[:, df.columns != 'y'].values
   parsed_trigram_idxs = [list(map(lambda x: ast.literal_eval(x), example)) for example in trigram_idx_strings]
   trigram_vecs = np.array(build_features.map_idxs_to_vecs(parsed_trigram_idxs, trigram_vecs_data))
+
   if concat:
     trigram_vecs = np.reshape(trigram_vecs, [len(df.columns) - 1, len(df.index), -1])
   else:
@@ -74,8 +89,11 @@ def read_dataset(path, limit=0, concat=True):
 
   return trigram_vecs, labels
 
+
 def get_time_string(time):
-  """TODO: DOCSTRING"""
+  """
+  Creates a string representation of minutes and seconds from the given time.
+  """
   mins = time // 60
   secs = time % 60
   time_string = ''
