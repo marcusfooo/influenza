@@ -5,7 +5,11 @@ from src.features.trigram import Trigram
 from src.utils import validation
 
 def sample_strains(strains_by_year, num_of_samples):
-  """TODO: DOCSTRING"""
+  """
+  Randomly picks num_of_samples strains from each year, 
+  sampling is done with replacement.
+  Returns a 2d list of strings (strains).
+  """
   sampled_strains_by_year = []
 
   for year_strains in strains_by_year:
