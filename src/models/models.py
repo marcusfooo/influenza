@@ -1,9 +1,13 @@
 
-from torch import nn, zeros, bmm, squeeze, unsqueeze, tanh, cat
+import torch
 import torch.nn.functional as F
+from torch import nn
+
 
 class RnnModel(nn.Module):
-  """TODO: DOCSTRING"""
+  """
+  An RNN model using either LSTM or GRU cells.
+  """
   def __init__(self, input_dim, output_dim, hidden_size, dropout_p, cell_type='LSTM'):
     super(RnnModel, self).__init__()
   
@@ -25,20 +29,22 @@ class RnnModel(nn.Module):
     encoder_outputs, _ = self.encoder(input_seq, hidden_state)
     score_seq = self.out(encoder_outputs[-1,:,:])
 
-    dummy_attn_weights = zeros(input_seq.shape[1], input_seq.shape[0])
+    dummy_attn_weights = torch.zeros(input_seq.shape[1], input_seq.shape[0])
     return score_seq, dummy_attn_weights # No attention weights
   
   def init_hidden(self, batch_size):
     if self.cell_type == 'LSTM':
-      h_init = zeros(1, batch_size, self.hidden_size)
-      c_init = zeros(1, batch_size, self.hidden_size)
+      h_init = torch.zeros(1, batch_size, self.hidden_size)
+      c_init = torch.zeros(1, batch_size, self.hidden_size)
       return (h_init, c_init)
     elif self.cell_type == 'GRU':
-      return zeros(1, batch_size, self.hidden_size)
+      return torch.zeros(1, batch_size, self.hidden_size)
 
 
 class AttentionModel(nn.Module):
-  """TODO: DOCSTRING"""
+  """
+  A temporal attention model using an LSTM encoder.
+  """
   def __init__(self, seq_length, input_dim, output_dim, hidden_size, dropout_p):
     super(AttentionModel, self).__init__()
 
@@ -61,22 +67,25 @@ class AttentionModel(nn.Module):
     return score_seq, attn_weights
 
   def attention(self, encoder_outputs, hidden):
-    attn_weights = F.softmax(squeeze(self.attn(hidden)), dim=1)
-    attn_weights = unsqueeze(attn_weights, 1)
+    attn_weights = F.softmax(torch.squeeze(self.attn(hidden)), dim=1)
+    attn_weights = torch.unsqueeze(attn_weights, 1)
     encoder_outputs = encoder_outputs.permute(1, 0, 2)
-    attn_applied = bmm(attn_weights, encoder_outputs)
+    attn_applied = torch.bmm(attn_weights, encoder_outputs)
 
-    return attn_applied, squeeze(attn_weights)
+    return attn_applied, torch.squeeze(attn_weights)
 
   def init_hidden(self, batch_size):
-    h_init = zeros(1, batch_size, self.hidden_size)
-    c_init = zeros(1, batch_size, self.hidden_size)
+    h_init = torch.zeros(1, batch_size, self.hidden_size)
+    c_init = torch.zeros(1, batch_size, self.hidden_size)
     
     return (h_init, c_init)
 
 
 class DaRnnModel(nn.Module):
-  """TODO: DOCSTRING"""
+  """
+  A Dual-Attention RNN model, attending over both the input at each timestep
+  and all hidden states of the encoder to make the final prediction.
+  """
   def __init__(self, seq_length, input_dim, output_dim, hidden_size, dropout_p):
     super(DaRnnModel, self).__init__()
 
@@ -105,43 +114,43 @@ class DaRnnModel(nn.Module):
       ht, hidden_state = self.encoder(x_tilde, hidden_state)
       h_seq.append(ht)
 
-    h = cat(h_seq, dim=0)
+    h = torch.cat(h_seq, dim=0)
     c, beta = self.temporal_attention(h)
     logits = self.out(c)
 
-    return logits, squeeze(beta)
+    return logits, torch.squeeze(beta)
 
   def input_attention(self, x, hidden_state, t):
     x = x.permute(1, 2, 0)
     h, c = hidden_state
     h = h.permute(1, 0, 2)
     c = c.permute(1, 0, 2)
-    hc = cat([h, c], dim=2)
+    hc = torch.cat([h, c], dim=2)
 
-    e = self.ve(tanh(self.We(hc) + self.Ue(x)))
-    e = squeeze(e)
+    e = self.ve(torch.tanh(self.We(hc) + self.Ue(x)))
+    e = torch.squeeze(e)
     alpha = F.softmax(e, dim=1)
     xt = x[:, :, t]
 
     x_tilde = alpha * xt
-    x_tilde = unsqueeze(x_tilde, 0)
+    x_tilde = torch.unsqueeze(x_tilde, 0)
 
     return x_tilde, alpha
 
   def temporal_attention(self, h):
     h = h.permute(1, 0, 2)
-    l = self.vd(tanh((self.Ud(h))))
-    l = squeeze(l)
+    l = self.vd(torch.tanh((self.Ud(h))))
+    l = torch.squeeze(l)
     beta = F.softmax(l, dim=1)
-    beta = unsqueeze(beta, 1)
-    c = bmm(beta, h)
-    c = squeeze(c)
+    beta = torch.unsqueeze(beta, 1)
+    c = torch.bmm(beta, h)
+    c = torch.squeeze(c)
 
     return c, beta
 
   def init_hidden(self, batch_size):
-    h_init = zeros(1, batch_size, self.m)
-    c_init = zeros(1, batch_size, self.m)
+    h_init = torch.zeros(1, batch_size, self.m)
+    c_init = torch.zeros(1, batch_size, self.m)
     
     return (h_init, c_init)
 
