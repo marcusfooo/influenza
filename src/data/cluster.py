@@ -10,6 +10,7 @@ import random
 import numpy as np
 from math import floor
 from src.visualization import visualize
+from src.utils import validation
 
 from scipy.cluster.hierarchy import linkage, fcluster
 
@@ -19,7 +20,7 @@ def cluster_years(prot_vecs, method='DBSCAN'):
 
         if(method == 'DBSCAN'):
             min_samples = floor(len(year_prot_vecs)*0.01)
-            clf = DBSCAN(eps=5, min_samples=min_samples, metric='euclidean').fit(year_prot_vecs)
+            clf = DBSCAN(eps=10, min_samples=min_samples, metric='euclidean').fit(year_prot_vecs)
             labels = clf.labels_
             centroids = NearestCentroid().fit(year_prot_vecs, labels).centroids_
 
@@ -91,12 +92,10 @@ def link_clusters(clusters):
     return clusters
 
 def label_encode(strains_by_year):
-    amino_acids = ['A', 'F', 'Q', 'R', 'T', 'Y', 'V', 'I', 'H', 'K', 'P', 'N', 'E', 'G', 'S', 'M', 'D', 'W', 'C', 'L', '-']
+    amino_acids = ['A', 'F', 'Q', 'R', 'T', 'Y', 'V', 'I', 'H', 'K', 'P', 'N', 'E', 'G', 'S', 'M', 'D', 'W', 'C', 'L', '-', 'B', 'J', 'Z', 'X']
     le = preprocessing.LabelEncoder()
     le.fit(amino_acids)
 
-    # unique, count = np.unique(list(strains_by_year[0][0]), return_counts=True)
-    # print(dict(zip(unique, count)))
 
     encoded_strains = []
     for year_strains in strains_by_year:
@@ -114,7 +113,7 @@ def cluster_raw(strains_by_year, method='dbscan'):
     for year_idx, year_strains in enumerate(strains_by_year):
         min_samples = math.floor(len(year_strains)*0.05)
         if(method == 'dbscan'):
-            clf = DBSCAN(eps=0.005, min_samples=min_samples, metric='hamming').fit(year_strains)
+            clf = DBSCAN(eps=0.07, min_samples=min_samples, metric='hamming').fit(year_strains)
             # clf = DBSCAN(eps=10, min_samples=5, metric=metric).fit(year_strains)
             labels = clf.labels_
 
@@ -135,7 +134,7 @@ def cluster_raw(strains_by_year, method='dbscan'):
         clusters.append(cluster)
     return clusters
 
-def sample_from_clusters(strains_by_year, clusters_by_years, sample_size):
+def sample_from_clusters(strains_by_year, clusters_by_years, sample_size, verbose=False):
     sampled_strains = [[]] * len(strains_by_year)
 
     # start sample from first cluster
@@ -163,7 +162,13 @@ def sample_from_clusters(strains_by_year, clusters_by_years, sample_size):
         neigh.fit(year_clusters['data'])
         neighbour_strain_idx = neigh.kneighbors(current_cluster, return_distance=False)
 
-        links = [year_clusters['labels'][idx[0]] for idx in neighbour_strain_idx]
+        nice_neighs = [idx[0] for idx in neighbour_strain_idx]
+
+        if(verbose): validation.list_summary(nice_neighs)
+
+        links = [year_clusters['labels'][idx] for idx in nice_neighs]
+
+        if(verbose): validation.list_summary(links)
 
         clustered_strains = {}
         for label_idx in year_clusters['population'].keys():

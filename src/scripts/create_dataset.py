@@ -26,22 +26,23 @@ def main():
   epitope_positions.sort()
 
   strains_by_year = make_dataset.read_strains_from(data_files, data_path)
-  strains_by_year = list(map(make_dataset.replace_uncertain_AAs,strains_by_year))
+  # strains_by_year = list(map(make_dataset.replace_uncertain_AAs,strains_by_year))
   train_strains_by_year, test_strains_by_year = make_dataset.train_test_split_strains(strains_by_year, test_split)
 
   if (clustering_method != 'random'):
     train_strains_by_year, train_clusters_by_year  = utils.cluster_years(train_strains_by_year, data_path, clustering_method)
     test_strains_by_year, test_clusters_by_year = utils.cluster_years(test_strains_by_year, data_path, clustering_method)
-    print('Train clusters over the years: ')
-    for i, year_clusters in enumerate(train_clusters_by_year):
-        print('Year: {}\n{}'.format(i, year_clusters['population']))
-    visualize.show_clusters(train_clusters_by_year, data_files, method='PCA', dims=3)
+    # print('Train clusters over the years: ')
+    # for i, year_clusters in enumerate(train_clusters_by_year):
+    #     print('Year: {}\n{}'.format(i, year_clusters['population']))
+    # visualize.show_clusters(train_clusters_by_year, data_files, method='PCA', dims=3)
+
     print('Test clusters over the years: ')
     for i, year_clusters in enumerate(test_clusters_by_year):
         print('Year: {}\n{}'.format(i, year_clusters['population']))
 
     train_strains_by_year = cluster.sample_from_clusters(train_strains_by_year, train_clusters_by_year, training_samples)
-    test_strains_by_year = cluster.sample_from_clusters(test_strains_by_year, test_clusters_by_year, test_samples)
+    test_strains_by_year = cluster.sample_from_clusters(test_strains_by_year, test_clusters_by_year, test_samples, verbose=True)
 
   else:
     train_strains_by_year = build_features.sample_strains(train_strains_by_year, training_samples)

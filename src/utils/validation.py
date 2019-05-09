@@ -1,4 +1,5 @@
 import math
+import numpy as np
 
 def get_confusion_matrix(y_true, y_pred):
     TP, FP, TN, FN = 0, 0, 0, 0
@@ -70,3 +71,7 @@ def evaluate(Y_real, Y_pred):
     val_acc = get_accuracy(conf_matrix)
 
     return precision, recall, fscore, mcc, val_acc
+
+def list_summary(data):
+  unique, count = np.unique(data, return_counts=True)
+  print(dict(zip(unique, count)))
