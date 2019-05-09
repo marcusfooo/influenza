@@ -9,25 +9,25 @@ import operator
 
 parameters = {
   # Exlude _train/_test and file ending
-  'data_set': './data/processed/triplet_random',  
+  'data_set': './data/processed/triplet_random',
 
   # 'svm', lstm', 'gru', 'attention' or 'da-rnn'
-  'model': 'gru',                  
+  'model': 'gru',
 
   # Number of hidden units in the encoder
-  'hidden_size': 128,                             
+  'hidden_size': 128,
 
   # Droprate (applied at input)
-  'dropout_p': 0.1,                               
+  'dropout_p': 0.1,
 
   # Note, no learning rate decay implemented
-  'learning_rate': 0.001,                         
+  'learning_rate': 0.001,
 
   # Size of mini batch
-  'batch_size': 512,                              
+  'batch_size': 512,
 
   # Number of training iterations
-  'num_of_epochs': 50                             
+  'num_of_epochs': 50
 }
 
 torch.manual_seed(1)
