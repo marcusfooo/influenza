@@ -9,7 +9,6 @@ from src.data import cluster
 def main():
   data_path = './data/raw/'
   data_files = ['2011.csv', '2012.csv', '2013.csv', '2014.csv', '2015.csv', '2016.csv']
-  data_files = ['2015.csv', '2016.csv']
   training_samples = 500
   test_samples = 125
   test_split = test_samples / (training_samples + test_samples)
@@ -28,9 +27,13 @@ def main():
   train_strains_by_year, test_strains_by_year = make_dataset.train_test_split_strains(strains_by_year, test_split)
 
   train_strains_by_year, train_clusters_by_year  = utils.cluster_years(train_strains_by_year, data_path)
+  test_strains_by_year, test_clusters_by_year = utils.cluster_years(test_strains_by_year, data_path)
+  print('Train clusters over the years: ')
+  for i, year_clusters in enumerate(train_clusters_by_year):
+      print('Year: {}\n{}'.format(i, year_clusters['population']))
+
   train_strains_by_year = cluster.sample_from_clusters(train_strains_by_year, train_clusters_by_year, training_samples)
 
-  test_strains_by_year, test_clusters_by_year = utils.cluster_years(test_strains_by_year, data_path)
   test_strains_by_year = cluster.sample_from_clusters(test_strains_by_year, test_clusters_by_year, test_samples)
 
   create_triplet_trigram_dataset(train_strains_by_year, trigram_to_idx, epitope_positions, file_name=('./data/processed/triplet_train'))
