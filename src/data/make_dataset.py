@@ -2,6 +2,7 @@ import pandas as pd
 import random
 import math
 
+
 def read_trigram_vecs(data_path='./data/raw/'):
   """
   Reads the csv file containing 100 dimensional prot vecs, the 
@@ -18,6 +19,7 @@ def read_trigram_vecs(data_path='./data/raw/'):
   
   return trigram_to_idx, trigram_vecs
 
+
 def read_strains_from(data_files, data_path='./data/raw/'):
   """
   Reads the raw strains from the data_files located by the data_path.
@@ -30,6 +32,7 @@ def read_strains_from(data_files, data_path='./data/raw/'):
     raw_strains.append(strains)
     
   return raw_strains
+
 
 def replace_uncertain_AAs(uncertain_df):
   """
@@ -47,6 +50,7 @@ def replace_uncertain_AAs(uncertain_df):
     
   return certain_df
 
+
 def train_test_split_strains(strains_by_year, test_split):
   """
   Shuffles the strains in each year and splits them into two disjoint sets,
@@ -63,6 +67,7 @@ def train_test_split_strains(strains_by_year, test_split):
     test_strains.append(test)
   
   return train_strains, test_strains
+
 
 def read_clusters_from(data_files, start_clusters=[0], no_clusters=1,  method='DBSCAN', data_path='../data/interim/'):
   """Reads in data and picks linked clusters"""
