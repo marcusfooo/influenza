@@ -4,11 +4,12 @@ import numpy as np
 from src.features.trigram import Trigram
 from src.utils import validation
 
+
 def sample_strains(strains_by_year, num_of_samples):
   """
   Randomly picks num_of_samples strains from each year, 
   sampling is done with replacement.
-  Returns a 2d list of strings (strains).
+  Returns a 2d list of strings.
   """
   sampled_strains_by_year = []
 
@@ -19,7 +20,13 @@ def sample_strains(strains_by_year, num_of_samples):
 
 
 def split_to_trigrams(strains_by_year, overlapping=True):
-  """TODO: DOCSTRING"""
+  """
+  Splits the strains into trigrams, by default overlapping.
+  If non-overlapping approach is used, the last amino acids are padded to make
+  an extra trigram if the strain length is not evenly divisible by three.
+  Expects a 2d [year, strain] list of strings,
+  returns a 3d [year, strain, trigram] list of Trigram objects.
+  """
   if overlapping:
     step_size = 1
     num_of_trigrams = len(strains_by_year[0][0]) - 2
@@ -54,6 +61,11 @@ def split_to_trigrams(strains_by_year, overlapping=True):
 
 
 def make_triplet_strains(strains_by_year, positions):
+  """
+  Splits each strain into substrings of 'triplets' refering to 3 overlapping
+  trigrams (5 amino acids), centered at the given positions.
+  Expects and returns a 2d [year, strain] list of strings.
+  """
   triplet_strains_by_year = []
   triplet_strain_margin = 2
 
@@ -76,6 +88,11 @@ def make_triplet_strains(strains_by_year, positions):
 
 
 def make_triplet_labels(triplet_strains_by_year):
+  """
+  Creates labels indicating whether the center amino acid in each triplet 
+  mutates in the last year (1 for yes, 0 for no).
+  Expects a 2d [year, triplet] list of strings and returns a list of ints.
+  """
   num_of_triplets = len(triplet_strains_by_year[0])
   epitope_position = 2
 
@@ -121,6 +138,10 @@ def get_majority_baselines(triplet_strains_by_year, labels):
 
 
 def extract_positions_by_year(positions, trigrams_by_year):
+  """
+  Extracts trigrams that contain an amino acid from one of the given positions.
+  Expects and returns a 3d [year, strain, trigram] list of Trigram objects.
+  """
   strain = trigrams_by_year[0][0]
   strain_idxs_to_extract = []
   idx = 0
@@ -154,8 +175,10 @@ def extract_positions_by_year(positions, trigrams_by_year):
 
 
 def squeeze_trigrams(trigrams_by_year):
-  """Takes all strains (represented by trigrams) from each year 
-  and squeezes them into a single array"""
+  """
+  Takes a 3d [year, strain, trigram] list and squeezes the 2nd dimension
+  to return a 2d list [year, trigram].
+  """
   squeezed_trigrams_by_year = []
 
   for year_trigrams in trigrams_by_year:
@@ -170,6 +193,10 @@ def squeeze_trigrams(trigrams_by_year):
 
 
 def replace_uncertain_amino_acids(amino_acids):
+  """
+  Randomly selects replacements for all uncertain amino acids.
+  Expects and returns a string.
+  """
   replacements = {'B': 'DN',
                   'J': 'IL',
                   'Z': 'EQ',
@@ -182,7 +209,9 @@ def replace_uncertain_amino_acids(amino_acids):
 
 
 def map_trigrams_to_idxs(nested_trigram_list, trigram_to_idx):
-  """TODO: DOCSTRING"""
+  """
+  Takes a nested list containing Trigram objects and maps them to their index.
+  """
   dummy_idx = len(trigram_to_idx)
   
   def mapping(trigram):
@@ -204,7 +233,9 @@ def map_trigrams_to_idxs(nested_trigram_list, trigram_to_idx):
 
 
 def map_idxs_to_vecs(nested_idx_list, idx_to_vec):
-  """TODO: DOCSTRING"""
+  """
+  Takes a nested list of indexes and maps them to their trigram vec (np array).
+  """
   dummy_vec = np.array([0] * idx_to_vec.shape[1])
   
   def mapping(idx):
@@ -225,7 +256,7 @@ def map_idxs_to_vecs(nested_idx_list, idx_to_vec):
 
 def get_diff_vecs(trigram_vecs_by_year):
   """
-  TODO: DOCSTRING
+  Calculates the elementwise difference between each consecutive trigram vec.
   Expects numpy array.
   """
   diff_vecs_by_year = np.zeros((trigram_vecs_by_year.shape[0] - 1, trigram_vecs_by_year.shape[1], trigram_vecs_by_year.shape[2]))
@@ -248,6 +279,7 @@ def indexes_to_mutations(trigram_indexes_x, trigram_indexes_y):
         mutations[i] = 1
   
   return mutations
+
 
 def reshape_to_linear(vecs_by_year):
   reshaped = [[]] * len(vecs_by_year[0])
