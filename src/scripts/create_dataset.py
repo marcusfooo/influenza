@@ -47,7 +47,7 @@ def create_triplet_trigram_dataset(strains_by_year, trigram_to_idx, epitope_posi
     f.write(' F1-score:\t%.3f' % f1)
 
   data_dict = {'y': labels}
-  for year in range(len(triplet_strains_by_year)):
+  for year in range(len(triplet_strains_by_year) - 1):
     data_dict[year] = trigram_idxs[year]
 
   pd.DataFrame(data_dict).to_csv(file_name + '.csv', index=False)
