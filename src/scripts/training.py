@@ -11,8 +11,8 @@ parameters = {
   # Exlude _train/_test and file ending
   'data_set': './data/processed/triplet_random',
 
-  # 'svm', lstm', 'gru', 'attention' or 'da-rnn'
-  'model': 'gru',
+  # 'svm', lstm', 'gru', 'attention' (only temporal) or 'da-rnn' (input and temporal attention)
+  'model': 'attention',
 
   # Number of hidden units in the encoder
   'hidden_size': 128,
