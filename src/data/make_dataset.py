@@ -34,23 +34,6 @@ def read_strains_from(data_files, data_path='./data/raw/'):
   return raw_strains
 
 
-def replace_uncertain_AAs(uncertain_df):
-  """
-  Randomly selects replacements for all uncertain amino acids.
-  Expects and returns a pandas dataframe or series.
-  """
-  replacements = {'B': 'DN',
-                  'J': 'IL',
-                  'Z': 'EQ',
-                  'X': 'ACDEFGHIKLMNPQRSTVWY'}
-
-  certain_df = uncertain_df
-  for AA in replacements.keys():
-    certain_df = certain_df.replace(AA, random.choice(replacements[AA]), regex=True)
-    
-  return certain_df
-
-
 def train_test_split_strains(strains_by_year, test_split):
   """
   Shuffles the strains in each year and splits them into two disjoint sets,
