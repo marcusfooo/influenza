@@ -33,17 +33,37 @@ def plot_training_history(loss, val_loss, acc, val_acc, mini_batch_scores, mini_
 
     # Plot prediction dynamics of test mini batch
     plt.subplot(1,3,3)
+    pos_label, neg_label = False, False
     for i in range(len(mini_batch_labels)):
         if mini_batch_labels[i]:
             score_sequence = [x[i][1] for x in mini_batch_scores]
-            plt.plot(score_sequence, 'b', label='Pos')
+            if not pos_label:
+                plt.plot(score_sequence, 'b', label='Pos')
+                pos_label = True
+            else:
+                plt.plot(score_sequence, 'b')
         else:
             score_sequence = [x[i][0] for x in mini_batch_scores]
-            plt.plot(score_sequence, 'r', label='Neg')
+            if not neg_label:
+                plt.plot(score_sequence, 'r', label='Neg')
+                neg_label = True
+            else:
+                plt.plot(score_sequence, 'r')
     
     plt.title('Logits')
-    plt.legend(labels=['Pos', 'Neg'])
-    plt.show()
+    plt.legend()
+
+
+def plot_attention(weights):
+    cax = plt.matshow(weights.numpy(), cmap='bone')
+    plt.colorbar(cax)
+    plt.grid(
+        b=False,
+        axis='both',
+        which='both',
+    )
+    plt.xlabel('Years')
+    plt.ylabel('Examples')
 
 
 def predictions_from_output(scores):
@@ -52,51 +72,61 @@ def predictions_from_output(scores):
     return predictions
 
 
-def verify_model(model, X, Y):
-    X.requires_grad_()
+def verify_model(model, X, Y, batch_size):
     criterion = torch.nn.CrossEntropyLoss()
-    scores = model(X, model.init_hidden(Y.shape[0]))
+    scores, _ = model(X, model.init_hidden(Y.shape[0]))
     print('Loss @ init: %.3f, expected: %.3f' % (criterion(scores, Y).item(), -math.log(1 / model.output_dim)))
 
+
+    mini_batch_X = X[:, :batch_size, :]
+    mini_batch_X.requires_grad_()
+    criterion = torch.nn.MSELoss()
+    scores, _ = model(mini_batch_X, model.init_hidden(batch_size))
+
     non_zero_idx = 1
-    perfect_scores = [[0, 0] for y in Y]
-    not_perfect_scores = [[1, 1] if i == non_zero_idx else [0, 0] for i, y in enumerate(Y)]
+    perfect_scores = [[0, 0] for i in range(batch_size)]
+    not_perfect_scores = [[1, 1] if i == non_zero_idx else [0, 0] for i in range(batch_size)]
 
     scores.data = torch.FloatTensor(not_perfect_scores)
     Y_perfect = torch.FloatTensor(perfect_scores)
-    criterion = torch.nn.MSELoss()
     loss = criterion(scores, Y_perfect)
     loss.backward()
 
     zero_tensor = torch.FloatTensor([0] * X.shape[2])
-    for i in range(X.shape[0]):
-        for j in range(X.shape[1]):
-                if sum(X.grad[i, j] != zero_tensor):
+    for i in range(mini_batch_X.shape[0]):
+        for j in range(mini_batch_X.shape[1]):
+                if sum(mini_batch_X.grad[i, j] != zero_tensor):
                     assert j == non_zero_idx, 'Input with loss set to zero has non-zero gradient.'
 
+    mini_batch_X.detach()
     print('Backpropagated dependencies OK')
-    X.detach()
 
 
-def train_rnn(model, verify, epochs, learning_rate, batch_size, X, Y, X_test, Y_test, class_weights=[0.5, 0.5]):
+def train_rnn(model, verify, epochs, learning_rate, batch_size, X, Y, X_test, Y_test, show_attention):
     print_interval = 10
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
-    criterion = torch.nn.CrossEntropyLoss(weight=torch.FloatTensor(class_weights))
+    criterion = torch.nn.CrossEntropyLoss()
     num_of_examples = X.shape[1]
     num_of_batches = math.floor(num_of_examples/batch_size)
 
     if verify:
-        verify_model(model, X, Y)
+        verify_model(model, X, Y, batch_size)
 
     all_losses = []
     all_val_losses = []
     all_accs = []
     all_val_accs = []
 
-    X_test_mini_batch = X_test[:, 184:192, :]
-    Y_test_mini_batch = Y_test[184:192]
-    mini_batch_scores = []
+    # Find mini batch that contains at least one mutation to plot
+    plot_batch_size = 4
+    i = 0
+    while not Y_test[i]:
+        i += 1
+
+    X_plot_batch = X_test[:, i:i+plot_batch_size, :]
+    Y_plot_batch = Y_test[i:i+plot_batch_size]
+    plot_batch_scores = []
 
     start_time = time.time()
     for epoch in range(epochs):
@@ -112,7 +142,7 @@ def train_rnn(model, verify, epochs, learning_rate, batch_size, X, Y, X_test, Y_
             X_batch = X[:, count:count+batch_size, :]
             Y_batch = Y[count:count+batch_size]
 
-            scores = model(X_batch, hidden)
+            scores, _ = model(X_batch, hidden)
             loss = criterion(scores, Y_batch)
 
             optimizer.zero_grad()
@@ -133,8 +163,8 @@ def train_rnn(model, verify, epochs, learning_rate, batch_size, X, Y, X_test, Y_
 
         with torch.no_grad():
             model.eval()
-            scores = model(X_test, model.init_hidden(Y_test.shape[0]))
-            predictions = predictions_from_output(scores)
+            test_scores, _ = model(X_test, model.init_hidden(Y_test.shape[0]))
+            predictions = predictions_from_output(test_scores)
             predictions = predictions.view_as(Y_test)
             
             conf_matrix = validation.get_confusion_matrix(Y_test, predictions)
@@ -144,15 +174,21 @@ def train_rnn(model, verify, epochs, learning_rate, batch_size, X, Y, X_test, Y_
             mcc = validation.get_mcc(conf_matrix)
             val_acc = validation.get_accuracy(conf_matrix)
 
-            val_loss = criterion(scores, Y_test).item()
+            val_loss = criterion(test_scores, Y_test).item()
             all_val_losses.append(val_loss)
             all_val_accs.append(val_acc)
 
-            mini_batch_scores.append(model(X_test_mini_batch, model.init_hidden(Y_test_mini_batch.shape[0])))
-
+            plot_scores, _ = model(X_plot_batch, model.init_hidden(Y_plot_batch.shape[0]))
+            plot_batch_scores.append(plot_scores)
 
         if epoch % print_interval == 0:
             print(' Epoch %d\tTime %s\tT_loss %.3f\tT_acc  %.3f\tV_loss %.3f\tV_acc  %.3f\tPrecis %.3f\tRecall %.3f\tFscore %.3f\tMCC    %.3f'
                 % (epoch, utils.get_time_string(elapsed_time), epoch_loss, epoch_acc, val_loss, val_acc, precision, recall, fscore, mcc))
 
-    plot_training_history(all_losses, all_val_losses, all_accs, all_val_accs, mini_batch_scores, Y_test_mini_batch)
+    plot_training_history(all_losses, all_val_losses, all_accs, all_val_accs, plot_batch_scores, Y_plot_batch)
+    if show_attention:
+        with torch.no_grad():
+            model.eval()
+            _, attn_weights = model(X_plot_batch, model.init_hidden(Y_plot_batch.shape[0]))
+            plot_attention(attn_weights)
+    plt.show()

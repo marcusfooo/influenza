@@ -16,7 +16,7 @@ test_trigram_vecs, test_labels = utils.read_dataset(data_set + '_test.csv', conc
 #train_trigram_vecs = build_features.get_diff_vecs(train_trigram_vecs)
 #test_trigram_vecs = build_features.get_diff_vecs(test_trigram_vecs)
 
-samples = 8192
+samples = 2**14
 X_train = torch.tensor(train_trigram_vecs[:, :samples], dtype=torch.float32)
 Y_train = torch.tensor(train_labels[:samples], dtype=torch.int64)
 X_test = torch.tensor(test_trigram_vecs, dtype=torch.float32)
@@ -35,12 +35,13 @@ with open(data_set + '_test_baseline.txt', 'r') as f:
 input_dim = X_train.shape[2]
 seq_length = X_train.shape[0]
 output_dim = 2
-hidden_size = 100
-#net = models.LstmModel(input_dim, hidden_size, output_dim)
-#net = models.AttentionModel(input_dim, seq_length, hidden_size, output_dim)
-net = models.DaRnnModel(input_dim, seq_length, hidden_size, output_dim)
+hidden_size = 128
+dropout_p = 0.1
+#net = models.RnnModel(input_dim, output_dim, hidden_size, cell_type='LSTM')
+#net = models.AttentionModel(seq_length, input_dim, output_dim, hidden_size, dropout_p)
+net = models.DaRnnModel(seq_length, input_dim, output_dim, hidden_size, dropout_p)
 
-num_of_epochs = 100
-learning_rate = 0.01
+num_of_epochs = 500
+learning_rate = 0.001
 batch_size = 512
-train_model.train_rnn(net, True, num_of_epochs, learning_rate, batch_size, X_train, Y_train, X_test, Y_test)
+train_model.train_rnn(net, True, num_of_epochs, learning_rate, batch_size, X_train, Y_train, X_test, Y_test, True)
