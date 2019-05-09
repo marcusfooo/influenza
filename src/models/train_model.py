@@ -78,11 +78,11 @@ def verify_model(model, X, Y):
     X.detach()
 
 
-def train_rnn(model, verify, epochs, learning_rate, batch_size, X, Y, X_test, Y_test):
+def train_rnn(model, verify, epochs, learning_rate, batch_size, X, Y, X_test, Y_test, class_weights=[0.5, 0.5]):
     print_interval = 10
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
-    criterion = torch.nn.CrossEntropyLoss(weight=torch.FloatTensor([0.1, 0.9]))
+    criterion = torch.nn.CrossEntropyLoss(weight=torch.FloatTensor(class_weights))
     num_of_examples = X.shape[1]
     num_of_batches = math.floor(num_of_examples/batch_size)
 

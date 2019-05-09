@@ -11,10 +11,13 @@ torch.manual_seed(1)
 np.random.seed(1)
 
 data_set = './data/processed/triplet'
-train_trigram_vecs, train_labels = utils.read_dataset(data_set + '_train.csv')
-test_trigram_vecs, test_labels = utils.read_dataset(data_set + '_test.csv')
+train_trigram_vecs, train_labels = utils.read_dataset(data_set + '_train.csv', concat=False)
+test_trigram_vecs, test_labels = utils.read_dataset(data_set + '_test.csv', concat=False)
 
-samples = 16000
+train_trigram_vecs = build_features.get_diff_vecs(train_trigram_vecs)
+test_trigram_vecs = build_features.get_diff_vecs(test_trigram_vecs)
+
+samples = 8192
 X_train = torch.tensor(train_trigram_vecs[:, :samples], dtype=torch.float32)
 Y_train = torch.tensor(train_labels[:samples], dtype=torch.int64)
 X_test = torch.tensor(test_trigram_vecs, dtype=torch.float32)
@@ -34,9 +37,8 @@ input_dim = X_train.shape[2]
 seq_length = X_train.shape[0]
 output_dim = 2
 hidden_size = 100
-num_of_layers = 1
-#net = models.LstmModel(input_dim, hidden_size, num_of_layers, output_dim)
-#net = models.AttentionModel(input_dim, seq_length, hidden_size, num_of_layers, output_dim)
+#net = models.LstmModel(input_dim, hidden_size, output_dim)
+#net = models.AttentionModel(input_dim, seq_length, hidden_size, output_dim)
 net = models.DaRnnModel(input_dim, seq_length, hidden_size, output_dim)
 
 num_of_epochs = 100
