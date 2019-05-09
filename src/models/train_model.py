@@ -73,9 +73,10 @@ def predictions_from_output(scores):
 
 
 def verify_model(model, X, Y, batch_size):
+    print('Sanity checks:')
     criterion = torch.nn.CrossEntropyLoss()
     scores, _ = model(X, model.init_hidden(Y.shape[0]))
-    print('Loss @ init: %.3f, expected: %.3f' % (criterion(scores, Y).item(), -math.log(1 / model.output_dim)))
+    print(' Loss @ init %.3f, expected ~%.3f' % (criterion(scores, Y).item(), -math.log(1 / model.output_dim)))
 
 
     mini_batch_X = X[:, :batch_size, :]
@@ -99,7 +100,7 @@ def verify_model(model, X, Y, batch_size):
                     assert j == non_zero_idx, 'Input with loss set to zero has non-zero gradient.'
 
     mini_batch_X.detach()
-    print('Backpropagated dependencies OK')
+    print(' Backpropagated dependencies OK')
 
 
 def train_rnn(model, verify, epochs, learning_rate, batch_size, X, Y, X_test, Y_test, show_attention):
@@ -119,7 +120,7 @@ def train_rnn(model, verify, epochs, learning_rate, batch_size, X, Y, X_test, Y_
     all_val_accs = []
 
     # Find mini batch that contains at least one mutation to plot
-    plot_batch_size = 4
+    plot_batch_size = 10
     i = 0
     while not Y_test[i]:
         i += 1
