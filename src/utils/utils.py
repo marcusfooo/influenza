@@ -50,9 +50,9 @@ def process_years(strains_by_year, data_path, squeeze=True, extract_epitopes=Fal
 
   return trigram_vecs, trigram_idxs
 
-def cluster_years(strains_by_year, data_path):
+def cluster_years(strains_by_year, data_path, method='DBSCAN'):
   encoded_strains = cluster.label_encode(strains_by_year)
-  clusters_by_year = cluster.cluster_raw(encoded_strains)
+  clusters_by_year = cluster.cluster_raw(encoded_strains, method)
   strains_by_year, clusters_by_year = cluster.remove_outliers(strains_by_year, clusters_by_year)
   return strains_by_year, clusters_by_year
 
