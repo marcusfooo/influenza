@@ -10,7 +10,7 @@ torch.manual_seed(1)
 np.random.seed(1)
 
 data_set = './data/processed/triplet'
-clustering_method = 'dbscan' # options: 'dbscan' 'hierarchy'
+clustering_method = 'hierarchy' # options: 'dbscan' 'hierarchy' 'random'
 train_trigram_vecs, train_labels = utils.read_dataset(data_set + f'_train.{clustering_method}.csv', concat=False)
 test_trigram_vecs, test_labels = utils.read_dataset(data_set + f'_test.{clustering_method}.csv', concat=False)
 
