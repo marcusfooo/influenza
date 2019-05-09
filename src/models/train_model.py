@@ -82,7 +82,7 @@ def train_rnn(model, verify, epochs, learning_rate, batch_size, X, Y, X_test, Y_
     print_interval = 10
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
-    criterion = torch.nn.CrossEntropyLoss()
+    criterion = torch.nn.CrossEntropyLoss(weight=torch.FloatTensor([0.1, 0.9]))
     num_of_examples = X.shape[1]
     num_of_batches = math.floor(num_of_examples/batch_size)
 
@@ -100,6 +100,7 @@ def train_rnn(model, verify, epochs, learning_rate, batch_size, X, Y, X_test, Y_
 
     start_time = time.time()
     for epoch in range(epochs):
+        model.train()
         running_loss = 0
         running_acc = 0
 
@@ -131,6 +132,7 @@ def train_rnn(model, verify, epochs, learning_rate, batch_size, X, Y, X_test, Y_
         all_losses.append(epoch_loss)
 
         with torch.no_grad():
+            model.eval()
             scores = model(X_test, model.init_hidden(Y_test.shape[0]))
             predictions = predictions_from_output(scores)
             predictions = predictions.view_as(Y_test)
