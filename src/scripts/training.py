@@ -37,9 +37,9 @@ seq_length = X_train.shape[0]
 output_dim = 2
 hidden_size = 128
 dropout_p = 0.1
-#net = models.RnnModel(input_dim, output_dim, hidden_size, cell_type='LSTM')
-#net = models.AttentionModel(seq_length, input_dim, output_dim, hidden_size, dropout_p)
-net = models.DaRnnModel(seq_length, input_dim, output_dim, hidden_size, dropout_p)
+#net = models.RnnModel(input_dim, output_dim, hidden_size, dropout_p, cell_type='LSTM')
+net = models.AttentionModel(seq_length, input_dim, output_dim, hidden_size, dropout_p)
+#net = models.DaRnnModel(seq_length, input_dim, output_dim, hidden_size, dropout_p)
 
 num_of_epochs = 500
 learning_rate = 0.001

@@ -4,23 +4,26 @@ import torch.nn.functional as F
 
 class RnnModel(nn.Module):
   """TODO: DOCSTRING"""
-  def __init__(self, input_dim, output_dim, hidden_size, cell_type='LSTM'):
+  def __init__(self, input_dim, output_dim, hidden_size, dropout_p, cell_type='LSTM'):
     super(RnnModel, self).__init__()
   
     self.output_dim = output_dim
     self.hidden_size = hidden_size
     self.cell_type = cell_type
     
+    self.dropout = nn.Dropout(dropout_p)
+    
     if cell_type == 'LSTM':
-      self.layer1 = nn.LSTM(input_dim, hidden_size)
+      self.encoder = nn.LSTM(input_dim, hidden_size)
     elif cell_type == 'GRU':
-      self.layer1 = nn.GRU(input_dim, hidden_size)
+      self.enocder = nn.GRU(input_dim, hidden_size)
 
-    self.layer2 = nn.Linear(hidden_size, output_dim)
+    self.out = nn.Linear(hidden_size, output_dim)
 
   def forward(self, input_seq, hidden_state):
-    out, _ = self.layer1(input_seq, hidden_state)
-    score_seq = self.layer2(out[-1,:,:])
+    input_seq = self.dropout(input_seq)
+    encoder_outputs, _ = self.encoder(input_seq, hidden_state)
+    score_seq = self.out(encoder_outputs[-1,:,:])
 
     dummy_attn_weights = zeros(input_seq.shape[1], input_seq.shape[0])
     return score_seq, dummy_attn_weights # No attention weights
@@ -53,7 +56,6 @@ class AttentionModel(nn.Module):
     input_seq = self.dropout(input_seq)
     encoder_outputs, (h, _) = self.encoder(input_seq, hidden_state)
     attn_applied, attn_weights = self.attention(encoder_outputs, h)
-    attn_applied = self.dropout(attn_applied)
     score_seq = self.out(attn_applied.reshape(-1, self.hidden_size))
 
     return score_seq, attn_weights
