@@ -1,7 +1,6 @@
 from src.models import models, train_model
 from src.data import make_dataset
 from src.features import build_features
-from src.features import original
 from src.utils import utils
 import torch
 import numpy as np
@@ -14,8 +13,8 @@ data_set = './data/processed/triplet'
 train_trigram_vecs, train_labels = utils.read_dataset(data_set + '_train.csv', concat=False)
 test_trigram_vecs, test_labels = utils.read_dataset(data_set + '_test.csv', concat=False)
 
-train_trigram_vecs = build_features.get_diff_vecs(train_trigram_vecs)
-test_trigram_vecs = build_features.get_diff_vecs(test_trigram_vecs)
+#train_trigram_vecs = build_features.get_diff_vecs(train_trigram_vecs)
+#test_trigram_vecs = build_features.get_diff_vecs(test_trigram_vecs)
 
 samples = 8192
 X_train = torch.tensor(train_trigram_vecs[:, :samples], dtype=torch.float32)
