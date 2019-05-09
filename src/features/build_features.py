@@ -244,3 +244,12 @@ def indexes_to_mutations(trigram_indexes_x, trigram_indexes_y):
         mutations[i] = 1
   
   return mutations
+
+def reshape_to_linear(vecs_by_year):
+  reshaped = [[]] * len(vecs_by_year[0])
+
+  for i, vec in enumerate(vecs_by_year):
+    reshaped[i] = reshaped[i] + [vec]
+
+  return reshaped
+      

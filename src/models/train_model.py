@@ -3,6 +3,7 @@ import torch.nn.functional as F
 import math
 import time
 import matplotlib.pyplot as plt
+from sklearn.svm import SVC
 from src.utils import utils, validation
 
 def repackage_hidden(h):
@@ -168,12 +169,7 @@ def train_rnn(model, verify, epochs, learning_rate, batch_size, X, Y, X_test, Y_
             predictions = predictions_from_output(test_scores)
             predictions = predictions.view_as(Y_test)
             
-            conf_matrix = validation.get_confusion_matrix(Y_test, predictions)
-            precision = validation.get_precision(conf_matrix)
-            recall = validation.get_recall(conf_matrix)
-            fscore = validation.get_f1score(conf_matrix)
-            mcc = validation.get_mcc(conf_matrix)
-            val_acc = validation.get_accuracy(conf_matrix)
+            precision, recall, fscore, mcc, val_acc = validation.evaluate(Y_test, predictions)
 
             val_loss = criterion(test_scores, Y_test).item()
             all_val_losses.append(val_loss)
@@ -193,3 +189,11 @@ def train_rnn(model, verify, epochs, learning_rate, batch_size, X, Y, X_test, Y_
             _, attn_weights = model(X_plot_batch, model.init_hidden(Y_plot_batch.shape[0]))
             plot_attention(attn_weights)
     plt.show()
+
+def svm_baseline(X, Y, X_test, Y_test):
+    clf = SVC(gamma='auto').fit(X, Y) 
+    Y_pred = clf.predict(X_test)
+    precision, recall, fscore, mcc, val_acc = validation.evaluate(Y_test, Y_pred)
+    print('SVM baseline:')
+    print('V_acc  %.3f\tPrecis %.3f\tRecall %.3f\tFscore %.3f\tMCC %.3f'
+                % (val_acc, precision, recall, fscore, mcc))

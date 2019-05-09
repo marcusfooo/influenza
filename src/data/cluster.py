@@ -112,8 +112,9 @@ def label_encode(strains_by_year):
 def cluster_raw(strains_by_year, method='dbscan'):
     clusters = []
     for year_idx, year_strains in enumerate(strains_by_year):
+        min_samples = math.floor(len(year_strains)*0.05)
         if(method == 'dbscan'):
-            clf = DBSCAN(eps=0.005, min_samples=10, metric='hamming').fit(year_strains)
+            clf = DBSCAN(eps=0.005, min_samples=min_samples, metric='hamming').fit(year_strains)
             # clf = DBSCAN(eps=10, min_samples=5, metric=metric).fit(year_strains)
             labels = clf.labels_
 

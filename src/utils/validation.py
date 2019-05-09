@@ -60,3 +60,13 @@ def get_mcc(conf_matrix):
         return (TP * TN - FP * FN) / math.sqrt((TP + FP) * (TP + FN) * (TN + FP) * (TN + FN))
     else:
         return 0
+
+def evaluate(Y_real, Y_pred):
+    conf_matrix = get_confusion_matrix(Y_real, Y_pred)
+    precision = get_precision(conf_matrix)
+    recall = get_recall(conf_matrix)
+    fscore = get_f1score(conf_matrix)
+    mcc = get_mcc(conf_matrix)
+    val_acc = get_accuracy(conf_matrix)
+
+    return precision, recall, fscore, mcc, val_acc
