@@ -218,6 +218,18 @@ def map_idxs_to_vecs(nested_idx_list, idx_to_vec):
   return list(map(mapping, nested_idx_list))
 
 
+def get_diff_vecs(trigram_vecs_by_year):
+  """
+  TODO: DOCSTRING
+  Expects numpy array.
+  """
+  diff_vecs_by_year = np.zeros((trigram_vecs_by_year.shape[0] - 1, trigram_vecs_by_year.shape[1], trigram_vecs_by_year.shape[2]))
+  for i in range(diff_vecs_by_year.shape[0]):
+    diff_vecs_by_year[i] = trigram_vecs_by_year[i+1] - trigram_vecs_by_year[i]
+
+  return diff_vecs_by_year
+
+
 def indexes_to_mutations(trigram_indexes_x, trigram_indexes_y):
   """
   Creates an numpy array containing 1's in positions where trigram_indexes_x and
