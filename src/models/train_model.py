@@ -59,6 +59,7 @@ def plot_training_history(loss, val_loss, acc, val_acc, mini_batch_scores, mini_
   
   plt.title('Logits')
   plt.legend()
+  plt.savefig('./reports/figures/training_curves.png')
 
 
 def plot_attention(weights):
@@ -74,6 +75,7 @@ def plot_attention(weights):
   )
   plt.xlabel('Years')
   plt.ylabel('Examples')
+  plt.savefig('./reports/figures/attention_weights.png')
 
 
 def predictions_from_output(scores):
