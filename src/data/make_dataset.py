@@ -2,6 +2,7 @@ import pandas as pd
 import random
 import math
 
+
 def read_trigram_vecs(data_path='./data/raw/'):
   """
   Reads the csv file containing 100 dimensional prot vecs, the 
@@ -18,6 +19,7 @@ def read_trigram_vecs(data_path='./data/raw/'):
   
   return trigram_to_idx, trigram_vecs
 
+
 def read_strains_from(data_files, data_path='./data/raw/'):
   """
   Reads the raw strains from the data_files located by the data_path.
@@ -31,20 +33,13 @@ def read_strains_from(data_files, data_path='./data/raw/'):
     
   return raw_strains
 
-def replace_uncertain_AAs(uncertain_df):
-  """TODO: DOCSTRING"""
-  replacements = {'B': 'DN',
-                  'J': 'IL',
-                  'Z': 'EQ',
-                  'X': 'ACDEFGHIKLMNPQRSTVWY'}
-
-  certain_df = uncertain_df
-  for AA in replacements.keys():
-    certain_df = certain_df.replace(AA, random.choice(replacements[AA]), regex=True)
-    
-  return certain_df
 
 def train_test_split_strains(strains_by_year, test_split):
+  """
+  Shuffles the strains in each year and splits them into two disjoint sets,
+  of size indicated by the test_split.
+  Expects and returns pandas dataframe or series.
+  """
   train_strains, test_strains = [], []
   for strains in strains_by_year:
     num_of_training_examples = int(math.floor(strains.count() * (1 - test_split)))
@@ -55,6 +50,7 @@ def train_test_split_strains(strains_by_year, test_split):
     test_strains.append(test)
   
   return train_strains, test_strains
+
 
 def read_clusters_from(data_files, start_clusters=[0], no_clusters=1,  method='DBSCAN', data_path='../data/interim/'):
   """Reads in data and picks linked clusters"""

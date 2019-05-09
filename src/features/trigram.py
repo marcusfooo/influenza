@@ -8,4 +8,8 @@ class Trigram:
         self.strain_pos = strain_pos
 
     def contains_position(self, pos):
+        """
+        Returns True if one of the amino acids in this trigram is from the
+        given pos in the strain.
+        """
         return self.strain_pos <= pos and pos < self.strain_pos + len(self.amino_acids)

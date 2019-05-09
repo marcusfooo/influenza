@@ -2,6 +2,10 @@ import math
 import numpy as np
 
 def get_confusion_matrix(y_true, y_pred):
+    """
+    Calculates the confusion matrix from given labels and predictions.
+    Expects tensors or numpy arrays of same shape.
+    """
     TP, FP, TN, FN = 0, 0, 0, 0
     
     for i in range(y_true.shape[0]):
@@ -23,11 +27,17 @@ def get_confusion_matrix(y_true, y_pred):
 
 
 def get_accuracy(conf_matrix):
+    """
+    Calculates accuracy metric from the given confusion matrix.
+    """
     TP, FP, FN, TN = conf_matrix[0][0], conf_matrix[0][1], conf_matrix[1][0], conf_matrix[1][1]
     return (TP + TN) / (TP + FP + FN + TN)
 
 
 def get_precision(conf_matrix):
+    """
+    Calculates precision metric from the given confusion matrix.
+    """
     TP, FP = conf_matrix[0][0], conf_matrix[0][1]
 
     if TP + FP > 0:
@@ -37,6 +47,9 @@ def get_precision(conf_matrix):
 
 
 def get_recall(conf_matrix):
+    """
+    Calculates recall metric from the given confusion matrix.
+    """
     TP, FN = conf_matrix[0][0], conf_matrix[1][0]
 
     if TP + FN > 0:
@@ -46,6 +59,9 @@ def get_recall(conf_matrix):
 
 
 def get_f1score(conf_matrix):
+    """
+    Calculates f1-score metric from the given confusion matrix.
+    """
     p = get_precision(conf_matrix)
     r = get_recall(conf_matrix)
 
@@ -56,11 +72,15 @@ def get_f1score(conf_matrix):
 
 
 def get_mcc(conf_matrix):
+    """
+    Calculates Matthew's Correlation Coefficient metric from the given confusion matrix.
+    """
     TP, FP, FN, TN = conf_matrix[0][0], conf_matrix[0][1], conf_matrix[1][0], conf_matrix[1][1]
     if TP + FP > 0 and TP + FN > 0 and TN + FP > 0 and TN + FN > 0:
         return (TP * TN - FP * FN) / math.sqrt((TP + FP) * (TP + FN) * (TN + FP) * (TN + FN))
     else:
         return 0
+
 
 def evaluate(Y_real, Y_pred):
     conf_matrix = get_confusion_matrix(Y_real, Y_pred)
