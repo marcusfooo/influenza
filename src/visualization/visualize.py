@@ -8,7 +8,7 @@ import numpy as np
 
 def show_clusters(clusters, dims=2, method='TSNE'):
     for cluster in clusters:
-        prot_vecs = cluster['prot_vecs']
+        prot_vecs = cluster['data']
         labels = cluster['labels']
 
         if(method == 'TSNE'):
