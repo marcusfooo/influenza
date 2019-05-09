@@ -26,7 +26,6 @@ def main():
   epitope_positions.sort()
 
   strains_by_year = make_dataset.read_strains_from(data_files, data_path)
-  # strains_by_year = list(map(make_dataset.replace_uncertain_AAs,strains_by_year))
   train_strains_by_year, test_strains_by_year = make_dataset.train_test_split_strains(strains_by_year, test_split)
 
   if (clustering_method != 'random'):
