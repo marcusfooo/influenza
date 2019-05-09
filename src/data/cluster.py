@@ -120,7 +120,7 @@ def cluster_raw(strains_by_year, method='dbscan'):
         if(method == 'hierarchy'):
             Z = linkage(year_strains, method='complete', metric='hamming')
             max_d = 0.135
-            visualize.show_dendogram(Z, year_idx, max_d)
+            # visualize.show_dendogram(Z, year_idx, max_d)
             labels = fcluster(Z, 5, depth=10)
             # labels = fcluster(Z, max_d, criterion='distance')
 
@@ -151,6 +151,7 @@ def sample_from_clusters(strains_by_year, clusters_by_years, sample_size, verbos
         # on last iteration sample missing
         missing_samples = sample_size - len(sampled_strains[0])
         if label_idx == list(first_year_population)[-1] and missing_samples > 0:
+            print(f'Missing samples: {missing_samples}')
             sampled_strains[0] = sampled_strains[0] + random.choices(cluster_strains, k=missing_samples)
 
 
@@ -158,17 +159,21 @@ def sample_from_clusters(strains_by_year, clusters_by_years, sample_size, verbos
     current_cluster = label_encode([sampled_strains[0]])[0]
     for year_idx in range(1, len(clusters_by_years)):
         year_clusters = clusters_by_years[year_idx]
+
+        if(verbose): 
+            print(f'\n>>> Linking {year_idx} year')
+            print(f'Clusters\n{year_clusters["population"]}')
+
         neigh = NearestNeighbors(n_neighbors=1, metric='hamming')
         neigh.fit(year_clusters['data'])
-        neighbour_strain_idx = neigh.kneighbors(current_cluster, return_distance=False)
+        neighbour_strain_idx = neigh.kneighbors(current_cluster, return_distance=True)
 
-        nice_neighs = [idx[0] for idx in neighbour_strain_idx]
-
-        if(verbose): validation.list_summary(nice_neighs)
-
+        nice_neighs = [idx[0] for idx in neighbour_strain_idx[1]]
         links = [year_clusters['labels'][idx] for idx in nice_neighs]
 
-        if(verbose): validation.list_summary(links)
+        if(verbose): 
+            validation.list_summary('Neighbours', nice_neighs)
+            validation.list_summary('Links', links)
 
         clustered_strains = {}
         for label_idx in year_clusters['population'].keys():

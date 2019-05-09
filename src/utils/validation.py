@@ -72,6 +72,7 @@ def evaluate(Y_real, Y_pred):
 
     return precision, recall, fscore, mcc, val_acc
 
-def list_summary(data):
-  unique, count = np.unique(data, return_counts=True)
-  print(dict(zip(unique, count)))
+def list_summary(name, data):
+    print(name)
+    unique, count = np.unique(data, return_counts=True)
+    print(dict(zip(unique, count)))
