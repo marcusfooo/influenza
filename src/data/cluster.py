@@ -109,19 +109,20 @@ def label_encode(strains_by_year):
 
     return encoded_strains
 
-def cluster_raw(strains_by_year, method='DBSCAN'):
+def cluster_raw(strains_by_year, method='dbscan'):
     clusters = []
     for year_idx, year_strains in enumerate(strains_by_year):
-        if(method == 'DBSCAN'):
+        if(method == 'dbscan'):
             clf = DBSCAN(eps=0.005, min_samples=10, metric='hamming').fit(year_strains)
             # clf = DBSCAN(eps=10, min_samples=5, metric=metric).fit(year_strains)
             labels = clf.labels_
 
         if(method == 'hierarchy'):
-            Z = linkage(year_strains, 'ward')
-            visualize.show_dendogram(Z, year_idx)
-            # labels = fcluster(Z, 8, depth=10)
-            labels = fcluster(Z, 320, criterion='distance')
+            Z = linkage(year_strains, method='complete', metric='hamming')
+            max_d = 0.135
+            visualize.show_dendogram(Z, year_idx, max_d)
+            labels = fcluster(Z, 5, depth=10)
+            # labels = fcluster(Z, max_d, criterion='distance')
 
         unique, count = np.unique(labels, return_counts=True)
 

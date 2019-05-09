@@ -10,11 +10,11 @@ from src.visualization import visualize
 def main():
   data_path = './data/raw/'
   data_files = ['2011.csv', '2012.csv', '2013.csv', '2014.csv', '2015.csv', '2016.csv', '2017.csv']
-  data_files = ['2015.csv', '2016.csv', '2017.csv']
+  # data_files = ['2015.csv', '2016.csv', '2017.csv']
   training_samples = 400
   test_samples = 100
   test_split = test_samples / (training_samples + test_samples)
-  clustering_method = 'hierarchy'
+  clustering_method = 'dbscan'
 
   trigram_to_idx, _ = make_dataset.read_trigram_vecs(data_path)
   epitope_a = [122, 124, 126, 130, 131, 132, 133, 135, 137, 138, 140, 142, 143, 144, 145, 146, 150, 152, 168]
@@ -36,13 +36,12 @@ def main():
       print('Year: {}\n{}'.format(i, year_clusters['population']))
 
   visualize.show_clusters(train_clusters_by_year, data_files, method='PCA', dims=3)
-  return
 
   train_strains_by_year = cluster.sample_from_clusters(train_strains_by_year, train_clusters_by_year, training_samples)
   test_strains_by_year = cluster.sample_from_clusters(test_strains_by_year, test_clusters_by_year, test_samples)
 
-  create_triplet_trigram_dataset(train_strains_by_year, trigram_to_idx, epitope_positions, file_name=('./data/processed/triplet_train'))
-  create_triplet_trigram_dataset(test_strains_by_year, trigram_to_idx, epitope_positions, file_name=('./data/processed/triplet_test'))
+  create_triplet_trigram_dataset(train_strains_by_year, trigram_to_idx, epitope_positions, file_name=(f'./data/processed/triplet_train.{clustering_method}'))
+  create_triplet_trigram_dataset(test_strains_by_year, trigram_to_idx, epitope_positions, file_name=(f'./data/processed/triplet_test.{clustering_method}'))
 
 def create_triplet_trigram_dataset(strains_by_year, trigram_to_idx, epitope_positions, file_name):
   """Creates a dataset in csv format.

@@ -37,8 +37,9 @@ def show_clusters(clusters, data_files, dims=2, method='TSNE', data_path='./repo
         plt.savefig(data_path + data_files[year_idx][:-4])
 
     if(show): plt.show()
+    plt.close()
 
-def show_dendogram(Z, year_idx, data_path='./reports/figures/dendograms/', show=False):
+def show_dendogram(Z, year_idx, max_d=0.05, data_path='./reports/figures/dendograms/', show=False):
     fig = plt.figure()
     plt.title('Hierarchical Clustering Dendrogram')
     plt.xlabel('sample index or (cluster size)')
@@ -50,11 +51,11 @@ def show_dendogram(Z, year_idx, data_path='./reports/figures/dendograms/', show=
         leaf_rotation=90.,
         leaf_font_size=12.,
         show_contracted=True,
-        annotate_above=10,
-        max_d=350,
+        annotate_above=0.05,
     )
     plt.savefig(data_path + str(year_idx))
     if(show): plt.show()
+    plt.close()
 
 def fancy_dendrogram(*args, **kwargs):
     max_d = kwargs.pop('max_d', None)
