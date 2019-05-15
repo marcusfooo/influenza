@@ -20,7 +20,7 @@ class RnnModel(nn.Module):
     if cell_type == 'LSTM':
       self.encoder = nn.LSTM(input_dim, hidden_size)
     elif cell_type == 'GRU':
-      self.enocder = nn.GRU(input_dim, hidden_size)
+      self.encoder = nn.GRU(input_dim, hidden_size)
 
     self.out = nn.Linear(hidden_size, output_dim)
 
